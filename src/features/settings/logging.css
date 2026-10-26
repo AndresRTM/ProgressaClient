@@ -1,0 +1,275 @@
+.logging-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.logging-section-description {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 17px;
+  letter-spacing: -0.15px;
+}
+.logging-workouts-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 17px 0 15px;
+}
+.logging-workouts-row h3,
+.logging-favorites-row strong {
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 500;
+  letter-spacing: -0.25px;
+}
+.logging-workouts-row p,
+.logging-favorites-row > span > span {
+  margin-top: 1px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
+  letter-spacing: -0.2px;
+}
+.logging-always-on {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: 16px;
+  background: var(--green-light);
+  font-size: 10px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+.logging-favorites-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 0 1px;
+  border-top: 1px solid var(--track);
+  text-align: left;
+  background: transparent;
+}
+.logging-favorites-row > span,
+.logging-favorites-row strong,
+.logging-favorites-row > span > span {
+  display: block;
+}
+.logging-favorites-row > svg {
+  color: var(--muted);
+}
+.logging-metric {
+  padding-top: 11px;
+}
+.logging-metric + .logging-metric {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--track);
+}
+.logging-metric-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  margin-bottom: 7px;
+}
+.logging-metric-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  letter-spacing: -0.3px;
+}
+.logging-metric-name > svg {
+  color: #7199a7;
+}
+.logging-dot {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.logging-dot-training {
+  background: var(--ink);
+}
+.logging-dot-calories {
+  background: var(--running);
+}
+.logging-dot-protein {
+  background: var(--strength);
+}
+.logging-dot-carbs {
+  background: var(--cycling);
+}
+.logging-dot-fat,
+.logging-dot-sleep {
+  background: var(--swimming);
+}
+.logging-mode-description {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 15px;
+  text-align: right;
+}
+.logging-hidden {
+  color: #929890;
+}
+.logging-goal-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 5px 9px;
+  border-radius: 16px;
+  background: var(--page);
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.logging-goal-button > svg {
+  color: var(--muted);
+}
+.logging-goal-button:hover {
+  background: var(--green-light);
+}
+.logging-segments {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 3px;
+  border-radius: 24px;
+  background: var(--page);
+}
+.logging-segment {
+  min-width: 0;
+  min-height: 32px;
+  padding: 6px 2px;
+  border-radius: 20px;
+  background: transparent;
+  color: #68736b;
+  font-size: 11px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+.logging-segment:hover {
+  background: var(--green-light);
+}
+.logging-segment.is-selected {
+  background: var(--green);
+  color: var(--ink);
+  font-weight: 500;
+}
+.logging-segment:first-child.is-selected {
+  background: white;
+  box-shadow: 0 1px 3px #222c2914;
+}
+.logging-sleep .logging-metric {
+  padding-top: 8px;
+}
+.logging-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.logging-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border-radius: 20px;
+  background: var(--page);
+  font-size: 10px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+.logging-chip .logging-dot {
+  width: 6px;
+  height: 6px;
+}
+.logging-summary .logging-preview-button {
+  width: 100%;
+  min-height: 46px;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  border-radius: 25px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.logging-target-help {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 19px;
+}
+.logging-preview-training h3 {
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+.logging-preview-sports {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.logging-preview-sports > div {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px 4px;
+  border-radius: 12px;
+  background: var(--page);
+  font-size: 12px;
+}
+.logging-preview-metrics {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+.logging-preview-goal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--track);
+  border-radius: 12px;
+  font-size: 13px;
+}
+.logging-preview-goal input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+.logging-preview-goal small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.logging-preview-amount {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+.logging-preview-amount input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--track);
+  border-radius: 12px;
+  background: var(--page);
+  font: inherit;
+}
+.logging-preview-close {
+  width: 100%;
+  margin-top: 24px;
+}

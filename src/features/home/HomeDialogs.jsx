@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import Icon from '../../components/Icon'
 import Sheet from '../../components/Sheet'
+import SportPicture from '../settings/SportPicture'
+import { formatTime } from '../settings/formatTime'
 import { ActivityChart, ActivityRow, GoalRows, WeekDays } from './HomeCards'
 import { ACTIVITY_TYPES, dateAtOffset, formatDuration, formatWeekRange, weekDays } from './homeData'
 
-export function AddActivityDialog({ selectedDate, onSave, onClose }) {
+export function AddActivityDialog({ selectedDate, activityType, onSave, onClose }) {
   function submit(event) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
@@ -22,7 +24,7 @@ export function AddActivityDialog({ selectedDate, onSave, onClose }) {
       <form className="home-form" onSubmit={submit}>
         <label>
           Activity
-          <select name="type" defaultValue="swimming">
+          <select name="type" defaultValue={activityType || 'swimming'}>
             {Object.entries(ACTIVITY_TYPES).map(([value, type]) => (
               <option key={value} value={value}>
                 {type.label}
@@ -124,7 +126,7 @@ export function AddGoalDialog({ onSave, onClose }) {
             name="target"
             type="number"
             min="1"
-            max={metric === 'variety' ? 4 : metric === 'minutes' ? 10080 : 100}
+            max={metric === 'variety' ? Object.keys(ACTIVITY_TYPES).length : metric === 'minutes' ? 10080 : 100}
             defaultValue={metric === 'minutes' ? 300 : metric === 'variety' ? 4 : 3}
             required
           />
@@ -146,11 +148,19 @@ export function PlanDialog({
   onActivity,
   onAdd,
   onClose,
+  timeFormat,
+  weekStartsOn = 'mon',
+  favoriteSports = [],
+  sportPictures,
 }) {
   const [visibleWeek, setVisibleWeek] = useState(weekStart)
+  const quickAddSports = [...new Set(favoriteSports)]
+    .filter((type) => Object.hasOwn(ACTIVITY_TYPES, type))
+    .slice(0, 3)
   function changeWeek(offset) {
     const nextWeek = dateAtOffset(visibleWeek, offset)
-    const weekdayOffset = (new Date(`${selectedDate}T12:00:00`).getDay() + 6) % 7
+    const selectedDay = new Date(`${selectedDate}T12:00:00`).getDay()
+    const weekdayOffset = weekStartsOn === 'sun' ? selectedDay : (selectedDay + 6) % 7
     setVisibleWeek(nextWeek)
     onSelect(dateAtOffset(nextWeek, weekdayOffset))
   }
@@ -170,6 +180,26 @@ export function PlanDialog({
         </button>
       </div>
       <WeekDays weekStart={visibleWeek} {...{ selectedDate, activities, onSelect }} />
+      {quickAddSports.length > 0 && (
+        <div className="plan-favorites" aria-label="Favorite sports">
+          {quickAddSports.map((type) => (
+            <button
+              className="plan-favorite"
+              key={type}
+              onClick={() => onAdd(selectedDate, type)}
+              aria-label={`Add ${ACTIVITY_TYPES[type].label} on ${selectedDate}`}
+            >
+              {sportPictures?.[type] ? (
+                <SportPicture sport={ACTIVITY_TYPES[type]} picture={sportPictures[type]} size={26} />
+              ) : (
+                <Icon name={ACTIVITY_TYPES[type].icon} size={22} />
+              )}
+              <span className="plan-favorite-label">{ACTIVITY_TYPES[type].label}</span>
+              <Icon name="plus" size={15} />
+            </button>
+          ))}
+        </div>
+      )}
       <div className="plan-list">
         {weekDays(visibleWeek).map((day) => {
           const dayActivities = activities
@@ -182,7 +212,13 @@ export function PlanDialog({
               </h3>
               {dayActivities.length ? (
                 dayActivities.map((activity) => (
-                  <ActivityRow key={activity.id} activity={activity} onClick={onActivity} />
+                  <ActivityRow
+                    key={activity.id}
+                    activity={activity}
+                    onClick={onActivity}
+                    timeFormat={timeFormat}
+                    sportPictures={sportPictures}
+                  />
                 ))
               ) : (
                 <button className="plan-rest-day" onClick={() => onAdd(day.date)}>
@@ -202,12 +238,16 @@ export function PlanDialog({
   )
 }
 
-export function ActivityDetailDialog({ activity, onClose }) {
+export function ActivityDetailDialog({ activity, onClose, timeFormat, sportPictures }) {
   const type = ACTIVITY_TYPES[activity.type]
   return (
     <Sheet title={type.label} onClose={onClose}>
       <div className="activity-detail-icon" style={{ color: type.color }}>
-        <Icon name={type.icon} size={58} />
+        {sportPictures?.[activity.type] ? (
+          <SportPicture sport={type} picture={sportPictures[activity.type]} size={90} />
+        ) : (
+          <Icon name={type.icon} size={58} />
+        )}
       </div>
       <p className="detail-date">
         {new Date(`${activity.date}T12:00:00`).toLocaleDateString('en-GB', {
@@ -219,7 +259,7 @@ export function ActivityDetailDialog({ activity, onClose }) {
       <dl className="detail-list">
         <div>
           <dt>Start time</dt>
-          <dd>{activity.time}</dd>
+          <dd>{formatTime(activity.time, timeFormat)}</dd>
         </div>
         <div>
           <dt>Duration</dt>

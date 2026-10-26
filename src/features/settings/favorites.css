@@ -1,0 +1,131 @@
+.favorite-settings .sports-list > li {
+  min-height: 76px;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.favorite-settings .sports-list > li:last-child {
+  padding-bottom: 12px;
+}
+
+.favorite-sports-list {
+  position: relative;
+}
+
+.sport-picture-hint {
+  margin-top: 2px;
+  color: #61734f;
+}
+
+.favorite-sport-row {
+  position: relative;
+  background: var(--surface);
+  transform-origin: 50% 50%;
+}
+
+.favorite-sport-row.is-dragging {
+  opacity: 0;
+}
+
+.favorite-settings .sport-drag,
+.favorite-sport-overlay .sport-drag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  padding: 0;
+  margin-left: -12px;
+  border-radius: 12px;
+  background: transparent;
+  color: #8e9991;
+  cursor: grab;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.favorite-settings .sport-drag:active,
+.favorite-sport-overlay .sport-drag {
+  background: var(--green-light);
+  color: var(--ink);
+  cursor: grabbing;
+}
+
+.favorite-settings .sport-drag:disabled {
+  color: #c6cdc6;
+  cursor: default;
+  background: transparent;
+}
+
+.favorite-settings .sport-action,
+.favorite-sport-overlay .sport-action {
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  margin-right: -10px;
+}
+
+.favorite-settings .sport-action:not(:disabled):active {
+  background: var(--page);
+}
+
+.favorite-settings .sport-drag:focus-visible,
+.favorite-settings .sport-action:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.favorite-sport-overlay {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 76px;
+  padding: 12px 6px;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow:
+    inset 0 0 0 1px rgb(197 237 128 / 60%),
+    0 12px 28px rgb(34 44 41 / 14%),
+    0 2px 6px rgb(34 44 41 / 8%);
+  pointer-events: none;
+  cursor: grabbing;
+}
+
+.favorite-sport-overlay .sport-drag {
+  margin-left: 0;
+}
+
+.favorite-sport-overlay .sport-action {
+  margin-right: 0;
+}
+
+.favorite-sport-overlay .sport-copy > small {
+  font-size: 11px;
+}
+
+@media (hover: hover) {
+  .favorite-settings .sport-drag:hover:not(:disabled) {
+    background: var(--page);
+    color: var(--ink);
+  }
+}
+
+@media (max-width: 359px) {
+  .favorite-sport-overlay .sport-copy > small {
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .favorite-sport-row,
+  .favorite-sport-overlay {
+    transition: none !important;
+    animation: none !important;
+  }
+}
