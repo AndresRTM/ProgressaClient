@@ -789,3 +789,27 @@
     animation-duration: 0.01ms !important;
   }
 }
+.activity-icon {
+  color: var(--sport-color, currentColor);
+}
+.plan-favorites {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+.plan-favorite-label {
+  font-size: 12px;
+}
+.plan-favorite {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  background: var(--page);
+  font-size: 12px;
+}
+.plan-favorite:hover {
+  background: var(--green-light);
+}

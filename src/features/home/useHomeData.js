@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ACTIVITY_TYPES, INITIAL_ACTIVITIES, INITIAL_GOALS, dateAtOffset } from './homeData'
 
 const STORAGE_KEY = 'progressa:home:v1'
@@ -92,8 +92,11 @@ function createId() {
 
 export default function useHomeData() {
   const [data, setData] = useState(loadHomeData)
+  const loadedData = useRef(data)
 
   useEffect(() => {
+    // Opening this version should not replace saved data from the removed features.
+    if (data === loadedData.current) return
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, ...data }))
     } catch {

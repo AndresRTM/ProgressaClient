@@ -1,4 +1,6 @@
 import Icon from '../../components/Icon'
+import SportPicture from '../settings/SportPicture'
+import { formatTime } from '../settings/formatTime'
 import {
   ACTIVITY_TYPES,
   DEMO_TODAY,
@@ -25,7 +27,12 @@ export function HomeHeader({ profileName, onProfile }) {
         <a className="brand" href="#home" aria-label="Progressa home">
           Progressa
         </a>
-        <button className="profile-button" onClick={onProfile} aria-label="Open your profile">
+        <button
+          className="profile-button"
+          onClick={onProfile}
+          aria-label="Open settings"
+          data-settings-trigger
+        >
           {initials}
         </button>
       </div>
@@ -41,11 +48,10 @@ export function WeekDays({ weekStart, selectedDate, activities, onSelect }) {
   return (
     <div className="week-days" aria-label="Choose a day">
       {weekDays(weekStart).map((day) => {
+        const scheduled = activities.filter((activity) => activity.date === day.date)
         const types = [
           ...new Set(
-            activities
-              .filter((activity) => activity.date === day.date)
-              .map((activity) => activity.type),
+            scheduled.map((activity) => activity.type),
           ),
         ]
         return (
@@ -70,24 +76,29 @@ export function WeekDays({ weekStart, selectedDate, activities, onSelect }) {
   )
 }
 
-export function ActivityRow({ activity, onClick, dayLabel }) {
+export function ActivityRow({ activity, onClick, dayLabel, timeFormat, sportPictures }) {
   const type = ACTIVITY_TYPES[activity.type]
   return (
     <button
       className="scheduled-activity"
       onClick={() => onClick(activity)}
-      aria-label={`View ${type.label}, ${activity.time}, ${activity.duration} minutes`}
+      aria-label={`View ${type.label}, ${formatTime(activity.time, timeFormat)}, ${activity.duration} minutes`}
     >
-      <Icon
-        name={type.icon}
-        size={36}
-        className={`activity-icon activity-icon--${activity.type}`}
-      />
+      {sportPictures?.[activity.type] ? (
+        <SportPicture sport={type} picture={sportPictures[activity.type]} size={40} />
+      ) : (
+        <Icon
+          name={type.icon}
+          size={36}
+          className={`activity-icon activity-icon--${activity.type}`}
+          style={{ '--sport-color': type.color }}
+        />
+      )}
       <span className="scheduled-copy">
         {dayLabel && <span className="activity-eyebrow">{dayLabel}</span>}
         <span className="activity-name">{type.label}</span>
         <span className="activity-meta">
-          {activity.time} · {activity.duration} min · {activity.pace}
+          {formatTime(activity.time, timeFormat)} · {activity.duration} min · {activity.pace}
         </span>
       </span>
       <span className="activity-arrow">
@@ -105,6 +116,8 @@ export function WeekCard({
   onPlan,
   onActivity,
   onAdd,
+  timeFormat,
+  sportPictures,
 }) {
   const selectedActivities = activities
     .filter((activity) => activity.date === selectedDate)
@@ -137,6 +150,8 @@ export function WeekCard({
               activity={activity}
               onClick={onActivity}
               dayLabel={dayLabel}
+              timeFormat={timeFormat}
+              sportPictures={sportPictures}
             />
           ))
         ) : (
@@ -175,7 +190,10 @@ export function GoalRows({ goals, summary }) {
             >
               <span
                 className={`progress-fill progress-fill--${goal.color}`}
-                style={{ width: `${progress.percent}%` }}
+                style={{
+                  width: `${progress.percent}%`,
+                  background: ACTIVITY_TYPES[goal.color]?.color,
+                }}
               />
             </div>
           </div>
@@ -253,15 +271,17 @@ export function ActivitySummary({ summary }) {
             {formatDuration(summary.totalMinutes)} <span>total</span>
           </p>
           <dl className="activity-legend">
-            {summary.byType.map((type) => (
-              <div key={type.type}>
-                <dt>
-                  <span className="legend-dot" style={{ background: type.color }} />
-                  {type.label}
-                </dt>
-                <dd>{formatDuration(type.minutes)}</dd>
-              </div>
-            ))}
+            {summary.byType
+              .filter((type) => type.minutes > 0)
+              .map((type) => (
+                <div key={type.type}>
+                  <dt>
+                    <span className="legend-dot" style={{ background: type.color }} />
+                    {type.label}
+                  </dt>
+                  <dd>{formatDuration(type.minutes)}</dd>
+                </div>
+              ))}
           </dl>
         </div>
       </div>

@@ -1,12 +1,11 @@
+import { SPORTS } from '../settings/settingsData'
+
 export const DEMO_TODAY = '2026-10-21'
 export const INITIAL_WEEK_START = '2026-10-19'
 
-export const ACTIVITY_TYPES = {
-  running: { label: 'Running', color: '#edb69b', icon: 'run' },
-  strength: { label: 'Strength', color: '#a9ca87', icon: 'strength' },
-  swimming: { label: 'Swimming', color: '#a5c9e2', icon: 'swim' },
-  cycling: { label: 'Cycling', color: '#d5ceac', icon: 'cycling' },
-}
+export const ACTIVITY_TYPES = Object.fromEntries(
+  SPORTS.map(({ id, label, color, icon }) => [id, { label, color, icon }]),
+)
 
 export const INITIAL_ACTIVITIES = [
   {
@@ -147,15 +146,17 @@ export function calculateSummary(activities, start) {
       Number.isFinite(activity.duration) &&
       activity.duration > 0,
   )
-  const byType = Object.entries(ACTIVITY_TYPES).map(([type, details]) => {
-    const matching = weekActivities.filter((activity) => activity.type === type)
-    return {
-      type,
-      ...details,
-      minutes: matching.reduce((total, activity) => total + activity.duration, 0),
-      sessions: matching.length,
-    }
-  })
+  const byType = Object.entries(ACTIVITY_TYPES)
+    .map(([type, details]) => {
+      const matching = weekActivities.filter((activity) => activity.type === type)
+      return {
+        type,
+        ...details,
+        minutes: matching.reduce((total, activity) => total + activity.duration, 0),
+        sessions: matching.length,
+      }
+    })
+    .filter((activity) => activity.sessions > 0)
 
   return {
     totalMinutes: byType.reduce((total, activity) => total + activity.minutes, 0),
