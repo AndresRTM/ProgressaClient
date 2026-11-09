@@ -1,0 +1,73 @@
+.log-sheet-grip {
+  width: 36px;
+  height: 4px;
+  margin: 10px auto 0;
+  border-radius: 4px;
+  background: #e7eae3;
+}
+.log-sheet .sheet-panel {
+  padding: 18px 20px max(24px, env(safe-area-inset-bottom));
+}
+.log-sheet .sheet-heading {
+  margin-bottom: 0;
+}
+.log-sheet .sheet-heading h2 {
+  font-size: 20px;
+  line-height: 28px;
+}
+.log-sheet .sheet-close {
+  width: 36px;
+  height: 36px;
+}
+.log-date {
+  margin: 0 0 22px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+.log-preview-note {
+  margin: -12px 0 16px;
+  font-size: 11px;
+  line-height: 17px;
+  color: var(--muted);
+}
+.log-daily-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 20px;
+}
+.log-save.primary-button {
+  min-height: 48px;
+  justify-content: center;
+  border-radius: 28px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.log-picker-help {
+  margin: 18px 0 2px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 18px;
+}
+.log-workout-feedback {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  color: #4e7132;
+  font-size: 12px;
+  line-height: 18px;
+}
+.log-error {
+  margin-top: 16px;
+  color: #9b3e35;
+  font-size: 12px;
+  line-height: 18px;
+}
+@media (min-width: 600px) {
+  .log-sheet .sheet-panel {
+    padding-bottom: 28px;
+  }
+}

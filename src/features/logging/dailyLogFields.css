@@ -1,0 +1,351 @@
+.daily-log-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.daily-log-section {
+  min-width: 0;
+}
+
+.daily-log-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 28px;
+  margin-bottom: 5px;
+}
+
+.daily-log-section-heading h3 {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.25px;
+  text-transform: uppercase;
+}
+
+.daily-log-settings-link {
+  min-height: 44px;
+  margin: -8px -7px -8px 0;
+  padding: 8px 7px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.daily-log-nutrition-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.daily-log-amount,
+.daily-log-goal {
+  min-width: 0;
+  min-height: 70px;
+  padding: 11px 12px;
+  border-radius: 14px;
+  background: var(--page);
+}
+
+.daily-log-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.daily-log-amount-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.daily-log-metric-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--running);
+}
+
+.daily-log-protein .daily-log-metric-dot {
+  background: var(--strength);
+}
+
+.daily-log-carbs .daily-log-metric-dot {
+  background: var(--cycling);
+}
+
+.daily-log-fat .daily-log-metric-dot {
+  background: var(--swimming);
+}
+
+.daily-log-amount-entry {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.daily-log-amount-entry input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  margin: -6px 0;
+  padding: 6px 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 26px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.daily-log-amount-entry input::placeholder {
+  color: #929a92;
+  opacity: 1;
+}
+
+.daily-log-amount-entry input::-webkit-inner-spin-button,
+.daily-log-amount-entry input::-webkit-outer-spin-button,
+.daily-log-sleep-edit input::-webkit-inner-spin-button,
+.daily-log-sleep-edit input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.daily-log-amount-entry > span {
+  flex-shrink: 0;
+}
+
+.daily-log-goal {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 57px;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.daily-log-goal.is-checked {
+  background: var(--green-light);
+}
+
+.daily-log-goal input {
+  display: grid;
+  place-content: center;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 1.5px solid #bec6ba;
+  border-radius: 6px;
+  background: var(--surface);
+  appearance: none;
+  cursor: pointer;
+}
+
+.daily-log-goal input:checked {
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.daily-log-goal input:checked::after {
+  content: '';
+  width: 8px;
+  height: 4px;
+  margin-top: -2px;
+  border-bottom: 1.5px solid var(--ink);
+  border-left: 1.5px solid var(--ink);
+  transform: rotate(-45deg);
+}
+
+.daily-log-goal-copy {
+  min-width: 0;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.daily-log-goal-copy > span,
+.daily-log-goal-copy small {
+  display: block;
+}
+
+.daily-log-goal-label,
+.daily-log-sleep-goal-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.daily-log-sleep-goal-label > svg {
+  color: #8bb2c6;
+}
+
+.daily-log-sleep-goal .daily-log-goal-copy small {
+  padding-left: 25px;
+}
+
+.daily-log-goal-copy small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 15px;
+}
+
+.daily-log-sleep-amount {
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--page);
+}
+
+.daily-log-sleep-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.daily-log-sleep-copy {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.daily-log-sleep-copy > svg {
+  color: #8bb2c6;
+}
+
+.daily-log-sleep-copy strong,
+.daily-log-sleep-copy small {
+  display: block;
+}
+
+.daily-log-sleep-copy strong {
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+}
+
+.daily-log-sleep-copy small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.daily-log-sleep-controls {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.daily-log-sleep-step {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 6px solid var(--page);
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 21px;
+}
+
+.daily-log-sleep-step:disabled {
+  opacity: 0.4;
+}
+
+.daily-log-sleep-duration {
+  min-width: 72px;
+  min-height: 44px;
+  padding: 3px 0;
+  background: transparent;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 22px;
+}
+
+.daily-log-sleep-duration.is-placeholder {
+  color: var(--muted);
+}
+
+.daily-log-sleep-duration small {
+  display: block;
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 13px;
+}
+
+.daily-log-sleep-edit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 5px 2px 4px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 17px;
+}
+
+.daily-log-sleep-edit > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.daily-log-sleep-edit input {
+  width: 74px;
+  min-height: 44px;
+  padding: 7px 9px;
+  border: 1px solid #dce1d7;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 16px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .daily-log-goal {
+    transition: none;
+  }
+}
+
+@media (max-width: 350px) {
+  .daily-log-amount,
+  .daily-log-goal {
+    padding: 10px;
+  }
+
+  .daily-log-goal {
+    gap: 7px;
+  }
+
+  .daily-log-sleep-copy {
+    gap: 5px;
+  }
+
+  .daily-log-sleep-copy > svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .daily-log-sleep-duration {
+    min-width: 68px;
+    font-size: 11px;
+  }
+}

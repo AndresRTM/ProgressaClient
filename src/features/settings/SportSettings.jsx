@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { SPORTS } from './settingsData'
+import { useSports } from '../activities/useSports'
 import FavoriteSportsSettings from './FavoriteSportsSettings'
 import SportPicturePicker from './SportPicturePicker'
 
 export default function SportSettings({ value, onChange, pictureStorage }) {
+  const { sports } = useSports()
   const [editingSport, setEditingSport] = useState(null)
-  const sport = SPORTS.find((item) => item.id === editingSport)
+  const sport = sports.find((item) => item.id === editingSport)
   return (
     <>
       <FavoriteSportsSettings

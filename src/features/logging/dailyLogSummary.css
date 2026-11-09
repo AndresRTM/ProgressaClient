@@ -1,0 +1,95 @@
+.daily-log-summary-entries {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.daily-log-summary-entry {
+  min-width: 0;
+  padding: 10px 11px;
+  border-radius: 12px;
+  background: var(--page);
+}
+
+.daily-log-summary-entry.is-complete {
+  background: var(--green-light);
+}
+
+.daily-log-summary-entry dt {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  line-height: 17px;
+}
+
+.daily-log-summary-entry dd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+  margin: 3px 0 0;
+  font-size: 13px;
+  line-height: 19px;
+  font-weight: 500;
+}
+
+.daily-log-summary-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--running);
+}
+
+.daily-log-summary-protein .daily-log-summary-dot {
+  background: var(--strength);
+}
+
+.daily-log-summary-carbs .daily-log-summary-dot {
+  background: var(--cycling);
+}
+
+.daily-log-summary-fat .daily-log-summary-dot {
+  background: var(--swimming);
+}
+
+.daily-log-summary-sleep dt > svg {
+  color: #8bb2c6;
+}
+
+.daily-log-summary-check {
+  display: grid;
+  place-items: center;
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.daily-log-summary-embedded {
+  margin-top: 20px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--page);
+}
+
+.daily-log-summary-embedded h3 {
+  font-size: 13px;
+  line-height: 19px;
+  font-weight: 600;
+}
+
+.daily-log-summary-embedded .daily-log-summary-entries {
+  margin-top: 9px;
+}
+
+.daily-log-summary-embedded .daily-log-summary-entry {
+  background: var(--surface);
+}
+
+.daily-log-summary-embedded .daily-log-summary-entry.is-complete {
+  background: var(--green-light);
+}
