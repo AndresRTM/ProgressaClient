@@ -20,7 +20,10 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import Icon from '../../components/Icon'
-import { SPORTS } from './settingsData'
+import { useSports } from '../activities/useSports'
+import { activityNameKey, normalizeActivityName } from '../activities/activityCatalog'
+import CreateActivityDialog from './CreateActivityDialog'
+import { MAX_FAVORITES } from './settingsData'
 import SportPicture from './SportPicture'
 import './favorites.css'
 
@@ -133,16 +136,23 @@ function DraggedSport({ sport, picture }) {
 }
 
 export default function FavoriteSportsSettings({ value, onChange, pictures = {}, onEditPicture }) {
+  const { sports, createSport } = useSports()
   const [query, setQuery] = useState('')
   const [activeId, setActiveId] = useState(null)
   const [announcement, setAnnouncement] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [createFeedback, setCreateFeedback] = useState('')
   const dragOrder = useRef(value)
   const reducedMotion = useReducedMotion()
-  const favorites = value.map((id) => SPORTS.find((sport) => sport.id === id)).filter(Boolean)
+  const favorites = value.map((id) => sports.find((sport) => sport.id === id)).filter(Boolean)
   const activeSport = favorites.find((sport) => sport.id === activeId)
-  const available = SPORTS.filter(
+  const activityName = normalizeActivityName(query)
+  const exactMatch = sports.some(
+    (sport) => activityNameKey(sport.label) === activityNameKey(activityName),
+  )
+  const available = sports.filter(
     (sport) =>
-      !value.includes(sport.id) && sport.label.toLowerCase().includes(query.trim().toLowerCase()),
+      !value.includes(sport.id) && activityNameKey(sport.label).includes(activityNameKey(query)),
   )
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
@@ -151,7 +161,7 @@ export default function FavoriteSportsSettings({ value, onChange, pictures = {},
   )
 
   function sportLabel(id) {
-    return SPORTS.find((sport) => sport.id === id)?.label ?? 'Sport'
+    return sports.find((sport) => sport.id === id)?.label ?? 'Sport'
   }
 
   function endDrag({ active, over }) {
@@ -169,9 +179,34 @@ export default function FavoriteSportsSettings({ value, onChange, pictures = {},
   }
 
   function addSport(sport) {
-    if (value.length >= 6 || value.includes(sport.id)) return
+    if (value.length >= MAX_FAVORITES || value.includes(sport.id)) return
     onChange([...value, sport.id])
     setAnnouncement(`${sport.label} added to favorites, position ${value.length + 1}.`)
+  }
+
+  function addOwnActivity(name, favorite) {
+    const { sport, error } = createSport(name)
+    if (!sport) return { error }
+
+    const existed = sports.some((existing) => existing.id === sport.id)
+    if (favorite && !value.includes(sport.id) && value.length < MAX_FAVORITES) {
+      onChange([...value, sport.id])
+      setCreateFeedback(`${sport.label} ${existed ? 'is now' : 'added and saved'} in your favorites.`)
+    } else if (value.includes(sport.id)) {
+      setCreateFeedback(`${sport.label} is already in your favorites.`)
+    } else {
+      setCreateFeedback(
+        `${sport.label} is ${existed ? 'already ' : ''}available in All sports. ${
+          value.length >= MAX_FAVORITES
+            ? 'Remove a favorite to add it to your favorites.'
+            : 'You can add it to your favorites below.'
+        }`,
+      )
+    }
+    setAnnouncement('')
+    setQuery('')
+    setCreating(false)
+    return { sport }
   }
 
   const dragAnnouncements = {
@@ -196,7 +231,7 @@ export default function FavoriteSportsSettings({ value, onChange, pictures = {},
       <section className="settings-card" aria-label="Your favorite sports">
         <div className="favorites-heading">
           <h2 className="settings-section-label">Your favorites</h2>
-          <span>{value.length} / 6</span>
+          <span>{value.length} / {MAX_FAVORITES}</span>
         </div>
         <p className="settings-hint">
           Hold the handle and drag to reorder. Your first three show on Plan.
@@ -256,7 +291,7 @@ export default function FavoriteSportsSettings({ value, onChange, pictures = {},
       <section className="settings-card" aria-label="All sports">
         <h2 className="settings-section-label">All sports</h2>
         <p className="settings-hint">
-          {value.length >= 6
+          {value.length >= MAX_FAVORITES
             ? 'Favorites are full. Remove one to add another.'
             : 'Choose up to six of your favorite sports.'}
         </p>
@@ -270,6 +305,15 @@ export default function FavoriteSportsSettings({ value, onChange, pictures = {},
             placeholder="Search all sports"
           />
         </label>
+        <button className="favorite-create-activity" type="button" onClick={() => setCreating(true)}>
+          <Icon name="plus" size={20} />
+          <span>
+            {activityName && !exactMatch
+              ? `Add “${activityName}” as your own activity`
+              : 'Add your own activity'}
+          </span>
+        </button>
+        {createFeedback && <p className="favorite-create-feedback" role="status">{createFeedback}</p>}
         <ul className="sports-list available-sports-list">
           {available.map((sport) => (
             <li key={sport.id}>
@@ -283,7 +327,7 @@ export default function FavoriteSportsSettings({ value, onChange, pictures = {},
               <button
                 className="sport-action"
                 type="button"
-                disabled={value.length >= 6}
+                disabled={value.length >= MAX_FAVORITES}
                 onClick={() => addSport(sport)}
                 aria-label={`Add ${sport.label} to favorites`}
               >
@@ -297,6 +341,14 @@ export default function FavoriteSportsSettings({ value, onChange, pictures = {},
       <span className="sr-only" role="status">
         {announcement}
       </span>
+      {creating && (
+        <CreateActivityDialog
+          initialName={exactMatch ? '' : activityName}
+          canFavorite={value.length < MAX_FAVORITES}
+          onCreate={addOwnActivity}
+          onClose={() => setCreating(false)}
+        />
+      )}
     </div>
   )
 }

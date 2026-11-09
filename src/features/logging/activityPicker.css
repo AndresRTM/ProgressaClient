@@ -1,0 +1,196 @@
+.activity-picker-heading,
+.activity-search-results > h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.activity-picker h3 {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 16px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+.activity-picker-heading > button {
+  min-height: 32px;
+  margin: -8px 0 -4px;
+  padding: 6px 0 6px 12px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+}
+.activity-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.activity-picker-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  min-height: 76px;
+  padding: 8px 4px;
+  border-radius: 14px;
+  background: var(--page);
+  font-size: 12px;
+  line-height: 18px;
+}
+.activity-picker-tile:hover,
+.activity-picker-tile:active {
+  background: var(--green-light);
+}
+.activity-picker-tile .sport-picture {
+  background: transparent;
+}
+.activity-planned-badge {
+  position: absolute;
+  top: -4px;
+  right: 5px;
+  padding: 2px 5px;
+  border-radius: 10px;
+  background: #dceaf2;
+  color: #355968;
+  font-size: 7px;
+  line-height: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.activity-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--page);
+  color: var(--muted);
+}
+.activity-picker-search.is-searching {
+  margin-top: 0;
+}
+.activity-picker-search:focus-within {
+  border-color: var(--ink);
+  background: white;
+}
+.activity-picker-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
+  outline: none;
+}
+.activity-picker-search input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+.activity-picker-search input::-webkit-search-cancel-button {
+  appearance: none;
+}
+.activity-picker-search > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 40px;
+  margin-right: -6px;
+  background: transparent;
+  color: var(--muted);
+}
+.activity-search-results {
+  margin-top: 18px;
+}
+.activity-search-results ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.activity-search-results li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.activity-result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  min-height: 64px;
+  padding: 8px 0;
+  text-align: left;
+  background: transparent;
+}
+.activity-result > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.activity-result strong {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+.activity-result small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+.activity-result-star {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  color: var(--muted);
+}
+.activity-result-star[aria-pressed='true'] {
+  color: #739d3b;
+}
+.activity-result-star[aria-pressed='true'] svg {
+  fill: var(--green-light);
+}
+.activity-result-star:disabled {
+  opacity: 0.35;
+}
+.activity-no-results {
+  padding: 16px 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 20px;
+}
+.activity-create {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px dashed #aab9a3;
+  border-radius: 12px;
+  background: transparent;
+  font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+}
+.activity-create svg { flex-shrink: 0; }
+.activity-create span { min-width: 0; overflow-wrap: anywhere; }
+.activity-create:hover, .activity-create:active { background: var(--green-light); }
+.activity-create-error { margin-top: 10px; color: #973f32; font-size: 13px; line-height: 20px; }
+.activity-picker-tile > span:last-child { max-width: 100%; overflow-wrap: anywhere; }

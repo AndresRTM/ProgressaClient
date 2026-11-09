@@ -1,69 +1,20 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import Icon from '../../components/Icon'
 import Sheet from '../../components/Sheet'
 import SportPicture from '../settings/SportPicture'
+import DailyLogSummary from '../logging/DailyLogSummary'
+import { useSports } from '../activities/useSports'
 import { formatTime } from '../settings/formatTime'
 import { ActivityChart, ActivityRow, GoalRows, WeekDays } from './HomeCards'
-import { ACTIVITY_TYPES, dateAtOffset, formatDuration, formatWeekRange, weekDays } from './homeData'
+import { dateAtOffset, formatDuration, formatWeekRange, weekDays } from './homeData'
+import './calendarActivity.css'
 
-export function AddActivityDialog({ selectedDate, activityType, onSave, onClose }) {
-  function submit(event) {
-    event.preventDefault()
-    const data = new FormData(event.currentTarget)
-    onSave({
-      type: data.get('type'),
-      date: data.get('date'),
-      time: data.get('time'),
-      duration: Number(data.get('duration')),
-      pace: data.get('pace'),
-    })
-  }
-  return (
-    <Sheet title="Make a little time." onClose={onClose}>
-      <p className="sheet-description">A little movement goes a long way.</p>
-      <form className="home-form" onSubmit={submit}>
-        <label>
-          Activity
-          <select name="type" defaultValue={activityType || 'swimming'}>
-            {Object.entries(ACTIVITY_TYPES).map(([value, type]) => (
-              <option key={value} value={value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Date
-          <input type="date" name="date" defaultValue={selectedDate} required />
-        </label>
-        <div className="form-columns">
-          <label>
-            Time
-            <input type="time" name="time" defaultValue="17:30" required />
-          </label>
-          <label>
-            Duration (min)
-            <input type="number" name="duration" min="1" max="600" defaultValue="30" required />
-          </label>
-        </div>
-        <label>
-          Pace
-          <select name="pace" defaultValue="Easy pace">
-            <option>Easy pace</option>
-            <option>Steady pace</option>
-            <option>A little challenge</option>
-          </select>
-        </label>
-        <button className="primary-button" type="submit">
-          Add activity
-          <Icon name="plus" size={19} />
-        </button>
-      </form>
-    </Sheet>
-  )
+function validFavoriteSports(favoriteSports, activityTypes) {
+  return [...new Set(favoriteSports)].filter((type) => Object.hasOwn(activityTypes, type))
 }
 
 export function AddGoalDialog({ onSave, onClose }) {
+  const { activityTypes } = useSports()
   const [metric, setMetric] = useState('sessions')
   function submit(event) {
     event.preventDefault()
@@ -107,7 +58,7 @@ export function AddGoalDialog({ onSave, onClose }) {
           <label>
             Activity
             <select name="activityType" defaultValue="running">
-              {Object.entries(ACTIVITY_TYPES).map(([value, type]) => (
+              {Object.entries(activityTypes).map(([value, type]) => (
                 <option key={value} value={value}>
                   {type.label}
                 </option>
@@ -126,7 +77,13 @@ export function AddGoalDialog({ onSave, onClose }) {
             name="target"
             type="number"
             min="1"
-            max={metric === 'variety' ? Object.keys(ACTIVITY_TYPES).length : metric === 'minutes' ? 10080 : 100}
+            max={
+              metric === 'variety'
+                ? Object.keys(activityTypes).length
+                : metric === 'minutes'
+                  ? 10080
+                  : 100
+            }
             defaultValue={metric === 'minutes' ? 300 : metric === 'variety' ? 4 : 3}
             required
           />
@@ -149,23 +106,30 @@ export function PlanDialog({
   onAdd,
   onClose,
   timeFormat,
-  weekStartsOn = 'mon',
   favoriteSports = [],
   sportPictures,
+  deletedActivity,
+  onUndoDelete,
 }) {
-  const [visibleWeek, setVisibleWeek] = useState(weekStart)
-  const quickAddSports = [...new Set(favoriteSports)]
-    .filter((type) => Object.hasOwn(ACTIVITY_TYPES, type))
-    .slice(0, 3)
+  const { activityTypes } = useSports()
+  const quickAddSports = validFavoriteSports(favoriteSports, activityTypes).slice(0, 3)
+
+  // Moving the selected day by a whole week keeps the same weekday highlighted.
   function changeWeek(offset) {
-    const nextWeek = dateAtOffset(visibleWeek, offset)
-    const selectedDay = new Date(`${selectedDate}T12:00:00`).getDay()
-    const weekdayOffset = weekStartsOn === 'sun' ? selectedDay : (selectedDay + 6) % 7
-    setVisibleWeek(nextWeek)
-    onSelect(dateAtOffset(nextWeek, weekdayOffset))
+    onSelect(dateAtOffset(selectedDate, offset))
   }
+
   return (
     <Sheet title="Your week, your way." onClose={onClose}>
+      {deletedActivity && onUndoDelete && (
+        <div className="calendar-deleted-banner" role="status">
+          <p>Activity deleted.</p>
+          <button type="button" onClick={onUndoDelete}>
+            <Icon name="rotate-ccw" size={17} />
+            Undo
+          </button>
+        </div>
+      )}
       <div className="plan-week-heading">
         <button
           className="icon-button previous-week"
@@ -174,12 +138,12 @@ export function PlanDialog({
         >
           <Icon name="chevron-right" size={20} />
         </button>
-        <p>{formatWeekRange(visibleWeek)}</p>
+        <p>{formatWeekRange(weekStart)}</p>
         <button className="icon-button" onClick={() => changeWeek(7)} aria-label="Next week">
           <Icon name="chevron-right" size={20} />
         </button>
       </div>
-      <WeekDays weekStart={visibleWeek} {...{ selectedDate, activities, onSelect }} />
+      <WeekDays {...{ weekStart, selectedDate, activities, onSelect }} />
       {quickAddSports.length > 0 && (
         <div className="plan-favorites" aria-label="Favorite sports">
           {quickAddSports.map((type) => (
@@ -187,21 +151,25 @@ export function PlanDialog({
               className="plan-favorite"
               key={type}
               onClick={() => onAdd(selectedDate, type)}
-              aria-label={`Add ${ACTIVITY_TYPES[type].label} on ${selectedDate}`}
+              aria-label={`Add ${activityTypes[type].label} on ${selectedDate}`}
             >
               {sportPictures?.[type] ? (
-                <SportPicture sport={ACTIVITY_TYPES[type]} picture={sportPictures[type]} size={26} />
+                <SportPicture
+                  sport={activityTypes[type]}
+                  picture={sportPictures[type]}
+                  size={26}
+                />
               ) : (
-                <Icon name={ACTIVITY_TYPES[type].icon} size={22} />
+                <Icon name={activityTypes[type].icon} size={22} />
               )}
-              <span className="plan-favorite-label">{ACTIVITY_TYPES[type].label}</span>
+              <span className="plan-favorite-label">{activityTypes[type].label}</span>
               <Icon name="plus" size={15} />
             </button>
           ))}
         </div>
       )}
       <div className="plan-list">
-        {weekDays(visibleWeek).map((day) => {
+        {weekDays(weekStart).map((day) => {
           const dayActivities = activities
             .filter((activity) => activity.date === day.date)
             .sort((a, b) => a.time.localeCompare(b.time))
@@ -238,8 +206,47 @@ export function PlanDialog({
   )
 }
 
-export function ActivityDetailDialog({ activity, onClose, timeFormat, sportPictures }) {
-  const type = ACTIVITY_TYPES[activity.type]
+export function ActivityDetailDialog({
+  activity,
+  onClose,
+  onSetDone,
+  onEdit,
+  onDelete,
+  timeFormat,
+  sportPictures,
+}) {
+  const { activityTypes } = useSports()
+  const [feedback, setFeedback] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const cancelDeleteRef = useRef(null)
+  const deleteButtonRef = useRef(null)
+  const wasConfirmingDelete = useRef(false)
+  const type = activityTypes[activity.type]
+  const done = activity.logged === true
+
+  useLayoutEffect(() => {
+    if (confirmDelete) cancelDeleteRef.current?.focus()
+    else if (wasConfirmingDelete.current) deleteButtonRef.current?.focus({ preventScroll: true })
+    wasConfirmingDelete.current = confirmDelete
+  }, [confirmDelete])
+
+  function changeStatus() {
+    const updated = onSetDone(activity, !done)
+    setFeedback(
+      updated
+        ? done
+          ? 'Marked as upcoming. You can mark it done when you finish.'
+          : 'Activity marked as done. Nice work!'
+        : 'Could not update this activity. Please try again.',
+    )
+  }
+
+  function deleteActivity() {
+    const deleted = onDelete(activity)
+    if (!deleted) setDeleteError('Could not delete this activity. Please try again.')
+  }
+
   return (
     <Sheet title={type.label} onClose={onClose}>
       <div className="activity-detail-icon" style={{ color: type.color }}>
@@ -256,6 +263,10 @@ export function ActivityDetailDialog({ activity, onClose, timeFormat, sportPictu
           month: 'long',
         })}
       </p>
+      <p className={`detail-status ${done ? 'detail-status-done' : ''}`}>
+        <Icon name={done ? 'check' : 'calendar'} size={15} />
+        {done ? 'Done' : 'Upcoming'}
+      </p>
       <dl className="detail-list">
         <div>
           <dt>Start time</dt>
@@ -270,10 +281,59 @@ export function ActivityDetailDialog({ activity, onClose, timeFormat, sportPictu
           <dd>{activity.pace}</dd>
         </div>
       </dl>
-      <button className="primary-button" onClick={onClose}>
-        Sounds good
-        <Icon name="check" size={19} />
-      </button>
+      {confirmDelete ? (
+        <section className="calendar-delete-confirm" aria-labelledby="calendar-delete-title">
+          <h3 id="calendar-delete-title">Delete this activity?</h3>
+          <p>This removes this {type.label} session from your calendar. Your activity and favorites stay saved.</p>
+          <div className="calendar-delete-actions">
+            <button
+              ref={cancelDeleteRef}
+              className="calendar-edit-button"
+              type="button"
+              onClick={() => {
+                setConfirmDelete(false)
+                setDeleteError('')
+              }}
+            >
+              Cancel
+            </button>
+            <button className="calendar-delete-button" type="button" onClick={deleteActivity}>
+              Delete activity
+            </button>
+          </div>
+          <p className="calendar-delete-error" role="alert">{deleteError}</p>
+        </section>
+      ) : (
+        <div className="calendar-detail-actions">
+          <button
+            className={done ? 'detail-status-button' : 'primary-button'}
+            type="button"
+            onClick={changeStatus}
+          >
+            {done ? 'Mark as upcoming' : 'Mark as done'}
+            <Icon name={done ? 'rotate-ccw' : 'check'} size={19} />
+          </button>
+          <div className="calendar-edit-actions">
+            <button className="calendar-edit-button" type="button" onClick={() => onEdit(activity)}>
+              <Icon name="edit" size={18} />
+              Edit activity
+            </button>
+            <button
+              ref={deleteButtonRef}
+              className="calendar-delete-button"
+              type="button"
+              onClick={() => {
+                setFeedback('')
+                setConfirmDelete(true)
+              }}
+            >
+              <Icon name="minus-circle" size={18} />
+              Delete activity
+            </button>
+          </div>
+        </div>
+      )}
+      <p className="detail-status-feedback" role="status">{feedback}</p>
     </Sheet>
   )
 }
@@ -291,7 +351,7 @@ export function GoalsDialog({ goals, summary, onAdd, onClose }) {
   )
 }
 
-export function ActivityDialog({ summary, onClose }) {
+export function ActivityDialog({ summary, dailyLog, units, onClose }) {
   return (
     <Sheet title="A week in motion" onClose={onClose}>
       <div className="expanded-summary">
@@ -300,6 +360,7 @@ export function ActivityDialog({ summary, onClose }) {
           <strong>{formatDuration(summary.totalMinutes)}</strong> of movement this week
         </p>
       </div>
+      <DailyLogSummary log={dailyLog} units={units} embedded />
       <dl className="detail-list">
         {summary.byType.map((type) => (
           <div key={type.type}>

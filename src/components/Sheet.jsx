@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from 'react'
 import Icon from './Icon'
 
-export default function Sheet({ title, children, onClose }) {
+export default function Sheet({ title, children, onClose, className = '', showHandle = false }) {
   const dialogRef = useRef(null)
   useLayoutEffect(() => {
     const dialog = dialogRef.current
@@ -18,7 +18,7 @@ export default function Sheet({ title, children, onClose }) {
   }, [])
   return (
     <dialog
-      className="sheet"
+      className={`sheet ${className}`}
       ref={dialogRef}
       aria-labelledby="sheet-title"
       onCancel={onClose}
@@ -26,6 +26,7 @@ export default function Sheet({ title, children, onClose }) {
         if (event.target === event.currentTarget) onClose()
       }}
     >
+      {showHandle && <div className="log-sheet-grip" aria-hidden="true" />}
       <div className="sheet-panel">
         <div className="sheet-heading">
           <h2 id="sheet-title">{title}</h2>

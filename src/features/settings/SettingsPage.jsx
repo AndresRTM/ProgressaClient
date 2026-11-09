@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from 'react'
 import Icon from '../../components/Icon'
+import { profileInitials } from '../home/homeData'
 import LoggingSettings from './LoggingSettings'
 import NotificationsSettings from './NotificationsSettings'
 import SportSettings from './SportSettings'
@@ -49,16 +50,6 @@ export default function SettingsPage({
   } = preferences
   const headingRef = useRef(null)
   const [title, subtitle] = pageHeadings[page] || pageHeadings.settings
-  const initials = (
-    profileName.trim().length <= 2
-      ? profileName
-      : profileName
-          .trim()
-          .split(/\s+/)
-          .map((part) => part[0])
-          .join('')
-          .slice(0, 2)
-  ).toUpperCase()
   const metric =
     settings.units.distance === 'km' &&
     settings.units.weight === 'kg' &&
@@ -96,7 +87,7 @@ export default function SettingsPage({
         {page === 'settings' && (
           <div className="settings-sections">
             <button className="settings-card settings-profile" onClick={onProfile}>
-              <span className="settings-avatar">{initials}</span>
+              <span className="settings-avatar">{profileInitials(profileName)}</span>
               <span className="settings-menu-copy">
                 <strong>Your profile</strong>
                 <small>Name, photo and age</small>

@@ -1,0 +1,164 @@
+.workout-details {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.workout-selected-sport {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--green-light);
+}
+
+.workout-selected-sport .sport-picture {
+  flex: 0 0 auto;
+  background: transparent;
+}
+
+.workout-selected-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.workout-selected-copy h3 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 22px;
+  overflow-wrap: anywhere;
+}
+
+.workout-selected-copy h3:focus {
+  outline: none;
+}
+
+.workout-selected-copy p {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.workout-change-sport {
+  min-height: 44px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: transparent;
+  color: #5d665e;
+  font-size: 12px;
+}
+
+.workout-option-group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.workout-option-group legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: #65706b;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.workout-duration-options,
+.workout-intensity-options {
+  display: grid;
+  gap: 6px;
+}
+
+.workout-duration-options {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.workout-intensity-options {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.workout-duration-options button,
+.workout-intensity-options button {
+  min-height: 44px;
+  min-width: 0;
+  padding: 8px 4px;
+  border-radius: 999px;
+  background: var(--page);
+  font-size: 13px;
+  line-height: 18px;
+  transition: background 150ms ease;
+}
+
+.workout-duration-options button[aria-pressed='true'],
+.workout-intensity-options button[aria-pressed='true'] {
+  background: var(--green);
+}
+
+.workout-schedule-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.workout-schedule-fields label,
+.workout-custom-duration {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  color: #65706b;
+  font-size: 12px;
+}
+
+.workout-custom-duration {
+  margin-top: 12px;
+}
+
+.workout-schedule-fields input,
+.workout-custom-duration input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #e0e5de;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.workout-save-button {
+  width: 100%;
+  min-height: 54px;
+  padding: 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 22px;
+}
+
+.workout-save-button:hover {
+  background: #34443c;
+}
+
+@media (max-width: 350px) {
+  .workout-duration-options {
+    gap: 4px;
+  }
+
+  .workout-duration-options button {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workout-duration-options button,
+  .workout-intensity-options button {
+    transition: none;
+  }
+}

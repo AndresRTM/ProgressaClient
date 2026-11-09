@@ -2,7 +2,6 @@ import { SPORTS } from './settingsData'
 
 export const SPORT_PICTURES_KEY = 'progressa:sport-pictures:v1'
 
-const SPORT_IDS = new Set(SPORTS.map((sport) => sport.id))
 const ICON_NAMES = new Set([...SPORTS.map((sport) => sport.icon), 'activity'])
 const MAX_FILE_BYTES = 10 * 1024 * 1024
 const MAX_PIXELS = 40 * 1000 * 1000
@@ -15,8 +14,8 @@ function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
 }
 
-export function isSportId(id) {
-  return SPORT_IDS.has(id)
+export function isSportId(id, sports = SPORTS) {
+  return sports.some((sport) => sport.id === id)
 }
 
 export function validateSportPicture(value) {
@@ -42,9 +41,9 @@ export function validateSportPicture(value) {
   return bytes <= MAX_IMAGE_BYTES ? { type: 'image', src: value.src } : null
 }
 
-export function readSportPictures(storage) {
+export function readSportPictures(sports = SPORTS) {
   try {
-    const saved = (storage ?? window.localStorage).getItem(SPORT_PICTURES_KEY)
+    const saved = window.localStorage.getItem(SPORT_PICTURES_KEY)
     if (!saved) return { pictures: {}, error: null }
     if (saved.length > MAX_STORAGE_CHARACTERS) throw new Error('Invalid picture storage')
 
@@ -59,7 +58,7 @@ export function readSportPictures(storage) {
     const pictures = {}
     for (const [id, value] of Object.entries(parsed.pictures)) {
       const picture = validateSportPicture(value)
-      if (isSportId(id) && picture) pictures[id] = picture
+      if (isSportId(id, sports) && picture) pictures[id] = picture
     }
 
     return { pictures, error: null }
@@ -72,14 +71,14 @@ export function readSportPictures(storage) {
   }
 }
 
-export function writeSportPictures(pictures, storage) {
+export function writeSportPictures(pictures, sports = SPORTS) {
   try {
     if (!isRecord(pictures)) throw new Error('Invalid pictures')
 
     const clean = {}
     for (const [id, value] of Object.entries(pictures)) {
       const picture = validateSportPicture(value)
-      if (!isSportId(id) || !picture) throw new Error('Invalid picture')
+      if (!isSportId(id, sports) || !picture) throw new Error('Invalid picture')
       clean[id] = picture
     }
 
@@ -92,7 +91,7 @@ export function writeSportPictures(pictures, storage) {
       }
     }
 
-    ;(storage ?? window.localStorage).setItem(SPORT_PICTURES_KEY, saved)
+    window.localStorage.setItem(SPORT_PICTURES_KEY, saved)
     return { ok: true, error: null }
   } catch (error) {
     const full = ['QuotaExceededError', 'NS_ERROR_DOM_QUOTA_REACHED'].includes(error?.name)

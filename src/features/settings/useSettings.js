@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
-import { DEFAULT_SETTINGS, SPORTS } from './settingsData'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSports } from '../activities/useSports'
+import { loadCustomSports } from '../activities/activityCatalog'
+import { DEFAULT_SETTINGS, MAX_FAVORITES } from './settingsData'
 
 const STORAGE_KEY = 'progressa:settings:v1'
-const SPORT_IDS = new Set(SPORTS.map((sport) => sport.id))
 const LOGGING_MODES = new Set(['off', 'amount', 'goal'])
 
 function isRecord(value) {
@@ -67,8 +68,8 @@ function validUpdates(values, rules) {
   return updates
 }
 
-function favoriteSports(ids) {
-  return [...new Set(ids.filter((id) => SPORT_IDS.has(id)))].slice(0, 6)
+function favoriteSports(ids, sportIds) {
+  return [...new Set(ids.filter((id) => sportIds.has(id)))].slice(0, MAX_FAVORITES)
 }
 
 function initialSettings() {
@@ -81,7 +82,7 @@ function initialSettings() {
   }
 }
 
-function loadSettings() {
+function loadSettings(sportIds) {
   const defaults = initialSettings()
 
   try {
@@ -97,7 +98,7 @@ function loadSettings() {
 
     return {
       favoriteSports: Array.isArray(stored.favoriteSports)
-        ? favoriteSports(stored.favoriteSports)
+        ? favoriteSports(stored.favoriteSports, sportIds)
         : defaults.favoriteSports,
       units: { ...defaults.units, ...validUpdates(stored.units, UNIT_RULES) },
       notifications: {
@@ -114,7 +115,9 @@ function loadSettings() {
 }
 
 export default function useSettings() {
-  const [settings, setSettings] = useState(loadSettings)
+  const { sports } = useSports()
+  const sportIds = useMemo(() => new Set(sports.map((sport) => sport.id)), [sports])
+  const [settings, setSettings] = useState(() => loadSettings(sportIds))
 
   useEffect(() => {
     try {
@@ -157,10 +160,15 @@ export default function useSettings() {
     (ids) => {
       if (!Array.isArray(ids)) return
 
-      const nextFavorites = favoriteSports(ids)
+      // A newly created activity is saved before the catalog's React update renders.
+      const currentSportIds = new Set([
+        ...sportIds,
+        ...loadCustomSports().map((sport) => sport.id),
+      ])
+      const nextFavorites = favoriteSports(ids, currentSportIds)
       setSettings((current) => ({ ...current, favoriteSports: nextFavorites }))
     },
-    [],
+    [sportIds],
   )
 
   return {

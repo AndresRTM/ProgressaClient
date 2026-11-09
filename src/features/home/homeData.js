@@ -1,11 +1,17 @@
 import { SPORTS } from '../settings/settingsData'
+import { activityTypesFromSports } from '../activities/activityCatalog'
 
 export const DEMO_TODAY = '2026-10-21'
 export const INITIAL_WEEK_START = '2026-10-19'
 
-export const ACTIVITY_TYPES = Object.fromEntries(
-  SPORTS.map(({ id, label, color, icon }) => [id, { label, color, icon }]),
-)
+export const ACTIVITY_TYPES = activityTypesFromSports(SPORTS)
+
+export const INTENSITY_PACES = {
+  easy: 'Easy pace',
+  moderate: 'Moderate pace',
+  hard: 'Hard pace',
+}
+export const NO_PACE = 'Not specified'
 
 export const INITIAL_ACTIVITIES = [
   {
@@ -22,7 +28,7 @@ export const INITIAL_ACTIVITIES = [
     date: '2026-10-20',
     time: '18:00',
     duration: 40,
-    pace: 'Steady pace',
+    pace: 'Moderate pace',
   },
   {
     id: 'swimming-wed',
@@ -46,7 +52,7 @@ export const INITIAL_ACTIVITIES = [
     date: '2026-10-23',
     time: '18:00',
     duration: 40,
-    pace: 'Steady pace',
+    pace: 'Moderate pace',
   },
   {
     id: 'cycling-sat',
@@ -111,6 +117,22 @@ export function dateAtOffset(isoDate, offset) {
   return toISODate(date)
 }
 
+export function startOfWeek(isoDate, weekStartsOn = 'mon') {
+  const weekday = parseDate(isoDate).getDay()
+  return dateAtOffset(isoDate, weekStartsOn === 'sun' ? -weekday : -((weekday + 6) % 7))
+}
+
+export function profileInitials(name) {
+  const trimmed = name.trim()
+  if (trimmed.length <= 2) return trimmed.toUpperCase()
+  return trimmed
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+}
+
 export function formatWeekRange(start) {
   const first = parseDate(start)
   const last = parseDate(dateAtOffset(start, 6))
@@ -136,17 +158,17 @@ export function weekDays(start) {
   })
 }
 
-export function calculateSummary(activities, start) {
+export function calculateSummary(activities, start, activityTypes = ACTIVITY_TYPES) {
   const end = dateAtOffset(start, 7)
   const weekActivities = activities.filter(
     (activity) =>
       activity.date >= start &&
       activity.date < end &&
-      Object.hasOwn(ACTIVITY_TYPES, activity.type) &&
+      Object.hasOwn(activityTypes, activity.type) &&
       Number.isFinite(activity.duration) &&
       activity.duration > 0,
   )
-  const byType = Object.entries(ACTIVITY_TYPES)
+  const byType = Object.entries(activityTypes)
     .map(([type, details]) => {
       const matching = weekActivities.filter((activity) => activity.type === type)
       return {
@@ -162,7 +184,7 @@ export function calculateSummary(activities, start) {
     totalMinutes: byType.reduce((total, activity) => total + activity.minutes, 0),
     sessions: weekActivities.length,
     byType,
-    uniqueTypes: byType.filter((activity) => activity.sessions > 0).length,
+    uniqueTypes: byType.length,
   }
 }
 

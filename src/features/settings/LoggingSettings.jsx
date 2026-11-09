@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import Icon from '../../components/Icon'
 import Sheet from '../../components/Sheet'
-import SportPicture from './SportPicture'
-import { SPORTS } from './settingsData'
+import { useSports } from '../activities/useSports'
+import LogTodayDialog from '../logging/LogTodayDialog'
+import { formatSleep, KJ_PER_KCAL } from '../logging/dailyLogData'
+import { DEMO_TODAY } from '../home/homeData'
 import './logging.css'
 
 const METRICS = [
@@ -18,7 +20,7 @@ const DEFAULT_UNITS = { energy: 'kcal' }
 function loggingMetrics(units) {
   if (units.energy !== 'kj') return METRICS
   return METRICS.map((metric) =>
-    metric.key === 'calories' ? { ...metric, unit: 'kJ', factor: 4.184 } : metric,
+    metric.key === 'calories' ? { ...metric, unit: 'kJ', factor: KJ_PER_KCAL } : metric,
   )
 }
 
@@ -32,68 +34,14 @@ const MODES = [
   { value: 'goal', label: 'Check goal' },
 ]
 
-function sportLabel(id) {
-  const sport = SPORTS.find((item) => item.id === id)
+function sportLabel(id, sports) {
+  const sport = sports.find((item) => item.id === id)
   if (sport) return sport.label
   return id.replace(/[-_]/g, ' ').replace(/^./, (letter) => letter.toUpperCase())
 }
 
-function LoggingPreview({ value, targets, metrics, favoriteSports, sportPictures, onClose }) {
-  const favorites = favoriteSports
-    .map((id) => SPORTS.find((sport) => sport.id === id))
-    .filter(Boolean)
-  const visibleMetrics = metrics.filter((metric) => value[metric.key] !== 'off')
-
-  return (
-    <Sheet title="Log today preview" onClose={onClose}>
-      <p className="sheet-description">A preview of your settings. Entries here are read-only.</p>
-      <section className="logging-preview-training" aria-label="Training preview">
-        <h3>Training</h3>
-        <div className="logging-preview-sports">
-          {favorites.map((sport) => (
-            <div key={sport.id}>
-              <SportPicture sport={sport} picture={sportPictures?.[sport.id]} size={40} />
-              <span>{sport.label}</span>
-            </div>
-          ))}
-        </div>
-        {!favorites.length && <p>Choose favorite sports in Settings.</p>}
-      </section>
-      <div className="logging-preview-metrics">
-        {visibleMetrics.map((metric) => (
-          value[metric.key] === 'goal' ? (
-            <label className="logging-preview-goal" key={metric.key}>
-              <input type="checkbox" disabled />
-              <span>{metric.label}<small>Goal {targetLabel(metric, targets[metric.key])}</small></span>
-            </label>
-          ) : (
-            <label className="logging-preview-amount" key={metric.key}>
-              <span>{metric.label}</span>
-              <input
-                type="number"
-                readOnly
-                aria-label={`${metric.label} amount preview`}
-                placeholder={`Amount (${metric.unit})`}
-              />
-            </label>
-          )
-        ))}
-      </div>
-      <button className="primary-button logging-preview-close" type="button" onClick={onClose}>
-        Done
-      </button>
-    </Sheet>
-  )
-}
-
 function targetLabel(metric, amount) {
-  if (metric.key === 'sleep') {
-    const hours = Math.floor(amount / 60)
-    const minutes = amount % 60
-    if (!hours) return `${minutes} min`
-    if (!minutes) return `${hours} h`
-    return `${hours} h ${minutes} min`
-  }
+  if (metric.key === 'sleep') return formatSleep(amount)
   return `${displayAmount(metric, amount)} ${metric.unit}`
 }
 
@@ -193,9 +141,10 @@ export default function LoggingSettings({
   onTargetChange,
   onFavorites,
 }) {
+  const { sports } = useSports()
   const [editingMetric, setEditingMetric] = useState(null)
   const [previewOpen, setPreviewOpen] = useState(false)
-  const favoriteNames = favoriteSports.slice(0, 3).map(sportLabel).join(', ')
+  const favoriteNames = favoriteSports.slice(0, 3).map((id) => sportLabel(id, sports)).join(', ')
   const favoriteSummary =
     favoriteSports.length > 3 ? `${favoriteNames} +${favoriteSports.length - 3}` : favoriteNames
   const metrics = loggingMetrics(units)
@@ -301,12 +250,13 @@ export default function LoggingSettings({
         />
       )}
       {previewOpen && (
-        <LoggingPreview
-          value={value}
-          targets={targets}
-          metrics={metrics}
-          favoriteSports={favoriteSports}
+        <LogTodayDialog
+          date={DEMO_TODAY}
+          settings={{ logging: value, targets, units, favoriteSports }}
           sportPictures={sportPictures}
+          preview
+          onEditFavorites={onFavorites}
+          onLoggingSettings={() => setPreviewOpen(false)}
           onClose={() => setPreviewOpen(false)}
         />
       )}

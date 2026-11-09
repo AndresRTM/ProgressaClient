@@ -184,6 +184,25 @@
 .scheduled-activity:hover {
   background: #e3f0ce;
 }
+.scheduled-activity.is-completed {
+  box-shadow: inset 0 0 0 1px #d9e8c7;
+}
+.scheduled-activity.is-completed .activity-eyebrow {
+  color: #497032;
+}
+.activity-icon {
+  color: var(--sport-color, currentColor);
+}
+.activity-arrow.is-done {
+  background: var(--green);
+  color: var(--ink);
+}
+.home-storage-error {
+  margin-top: 16px;
+  color: #9b3e35;
+  font-size: 12px;
+  line-height: 18px;
+}
 .activity-icon--swimming {
   color: #419ed0;
 }
@@ -211,6 +230,7 @@
   letter-spacing: 0.15px;
 }
 .activity-name {
+  overflow-wrap: anywhere;
   font-size: 16px;
   line-height: 22px;
   font-weight: 600;
@@ -378,12 +398,19 @@
   white-space: nowrap;
 }
 .activity-legend dt {
+  min-width: 0;
   color: var(--muted);
   display: flex;
   align-items: center;
   gap: 4px;
 }
+.activity-legend dt > span:last-child {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 .activity-legend dd {
+  flex-shrink: 0;
   margin: 0;
 }
 .legend-dot {
@@ -481,6 +508,21 @@
   opacity: 1;
   transform: translate(-50%, 0);
 }
+.notice-with-action {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 6px 4px 16px;
+  pointer-events: auto;
+}
+.notice-with-action button {
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--green);
+  font-weight: 600;
+}
 .sheet {
   position: fixed;
   inset: auto 0 0;
@@ -511,6 +553,8 @@
   margin-bottom: 10px;
 }
 .sheet-heading h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: 21px;
   line-height: 28px;
   font-weight: 600;
@@ -601,6 +645,31 @@
 .previous-week svg {
   transform: rotate(180deg);
 }
+.plan-favorites {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+.plan-favorite-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.plan-favorite {
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  background: var(--page);
+  font-size: 12px;
+}
+.plan-favorite svg { flex-shrink: 0; }
+.plan-favorite:hover {
+  background: var(--green-light);
+}
 .plan-list {
   margin-top: 24px;
   display: flex;
@@ -652,6 +721,53 @@
   text-align: center;
   font-size: 14px;
 }
+.detail-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: fit-content;
+  margin: 12px auto 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f0f2ee;
+  color: #5b685f;
+  font-size: 12px;
+  font-weight: 500;
+}
+.detail-status-done {
+  background: var(--green-light);
+  color: #3e6a29;
+}
+.detail-status-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 24px;
+  padding: 12px 16px;
+  border: 1px solid #dce4d3;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+}
+.detail-status-button:hover {
+  background: var(--green-light);
+}
+.detail-status-feedback {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+.detail-status-feedback:empty {
+  display: none;
+}
 .detail-list {
   display: flex;
   flex-direction: column;
@@ -667,6 +783,8 @@
   gap: 12px;
 }
 .detail-list dt {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--muted);
   font-size: 13px;
 }
@@ -788,28 +906,4 @@
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
-}
-.activity-icon {
-  color: var(--sport-color, currentColor);
-}
-.plan-favorites {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 20px;
-}
-.plan-favorite-label {
-  font-size: 12px;
-}
-.plan-favorite {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 11px;
-  border-radius: 12px;
-  background: var(--page);
-  font-size: 12px;
-}
-.plan-favorite:hover {
-  background: var(--green-light);
 }

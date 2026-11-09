@@ -1,26 +1,17 @@
 import Icon from '../../components/Icon'
 import SportPicture from '../settings/SportPicture'
+import { useSports } from '../activities/useSports'
 import { formatTime } from '../settings/formatTime'
 import {
-  ACTIVITY_TYPES,
   DEMO_TODAY,
   formatDuration,
   formatWeekRange,
   goalProgress,
+  profileInitials,
   weekDays,
 } from './homeData'
 
 export function HomeHeader({ profileName, onProfile }) {
-  const initials = (
-    profileName.trim().length <= 2
-      ? profileName
-      : profileName
-          .trim()
-          .split(/\s+/)
-          .map((part) => part[0])
-          .join('')
-          .slice(0, 2)
-  ).toUpperCase()
   return (
     <header className="home-header" id="home">
       <div className="brand-row">
@@ -33,7 +24,7 @@ export function HomeHeader({ profileName, onProfile }) {
           aria-label="Open settings"
           data-settings-trigger
         >
-          {initials}
+          {profileInitials(profileName)}
         </button>
       </div>
       <div className="welcome">
@@ -45,28 +36,26 @@ export function HomeHeader({ profileName, onProfile }) {
 }
 
 export function WeekDays({ weekStart, selectedDate, activities, onSelect }) {
+  const { activityTypes } = useSports()
   return (
     <div className="week-days" aria-label="Choose a day">
       {weekDays(weekStart).map((day) => {
         const scheduled = activities.filter((activity) => activity.date === day.date)
-        const types = [
-          ...new Set(
-            scheduled.map((activity) => activity.type),
-          ),
-        ]
+        const doneCount = scheduled.filter((activity) => activity.logged).length
+        const types = [...new Set(scheduled.map((activity) => activity.type))]
         return (
           <button
             className={`day-button${selectedDate === day.date ? ' is-selected' : ''}`}
             key={day.date}
             onClick={() => onSelect(day.date)}
-            aria-label={`${day.longDay}, ${day.dayNumber} ${new Date(`${day.date}T12:00:00`).toLocaleDateString('en-GB', { month: 'long' })}${day.date === DEMO_TODAY ? ', today' : ''}`}
+            aria-label={`${day.longDay}, ${day.dayNumber} ${new Date(`${day.date}T12:00:00`).toLocaleDateString('en-GB', { month: 'long' })}${day.date === DEMO_TODAY ? ', today' : ''}, ${scheduled.length - doneCount} upcoming, ${doneCount} done`}
             aria-pressed={selectedDate === day.date}
           >
             <span className="day-name">{day.day}</span>
             <span className="day-number">{day.dayNumber}</span>
             <span className="day-dots" aria-hidden="true">
               {types.map((type) => (
-                <span key={type} style={{ background: ACTIVITY_TYPES[type].color }} />
+                <span key={type} style={{ background: activityTypes[type]?.color }} />
               ))}
             </span>
           </button>
@@ -77,12 +66,13 @@ export function WeekDays({ weekStart, selectedDate, activities, onSelect }) {
 }
 
 export function ActivityRow({ activity, onClick, dayLabel, timeFormat, sportPictures }) {
-  const type = ACTIVITY_TYPES[activity.type]
+  const { activityTypes } = useSports()
+  const type = activityTypes[activity.type]
   return (
     <button
-      className="scheduled-activity"
+      className={`scheduled-activity${activity.logged ? ' is-completed' : ''}`}
       onClick={() => onClick(activity)}
-      aria-label={`View ${type.label}, ${formatTime(activity.time, timeFormat)}, ${activity.duration} minutes`}
+      aria-label={`View ${type.label}, ${activity.logged ? 'done' : 'upcoming'}, ${formatTime(activity.time, timeFormat)}, ${activity.duration} minutes`}
     >
       {sportPictures?.[activity.type] ? (
         <SportPicture sport={type} picture={sportPictures[activity.type]} size={40} />
@@ -95,14 +85,16 @@ export function ActivityRow({ activity, onClick, dayLabel, timeFormat, sportPict
         />
       )}
       <span className="scheduled-copy">
-        {dayLabel && <span className="activity-eyebrow">{dayLabel}</span>}
+        <span className="activity-eyebrow">
+          {dayLabel ? `${dayLabel} · ` : ''}{activity.logged ? 'Done' : 'Upcoming'}
+        </span>
         <span className="activity-name">{type.label}</span>
         <span className="activity-meta">
           {formatTime(activity.time, timeFormat)} · {activity.duration} min · {activity.pace}
         </span>
       </span>
-      <span className="activity-arrow">
-        <Icon name="arrow-right" size={18} />
+      <span className={`activity-arrow${activity.logged ? ' is-done' : ''}`}>
+        <Icon name={activity.logged ? 'check' : 'arrow-right'} size={18} />
       </span>
     </button>
   )
@@ -169,6 +161,7 @@ export function WeekCard({
 }
 
 export function GoalRows({ goals, summary }) {
+  const { activityTypes } = useSports()
   return (
     <div className="goal-list">
       {goals.map((goal) => {
@@ -192,7 +185,7 @@ export function GoalRows({ goals, summary }) {
                 className={`progress-fill progress-fill--${goal.color}`}
                 style={{
                   width: `${progress.percent}%`,
-                  background: ACTIVITY_TYPES[goal.color]?.color,
+                  background: activityTypes[goal.color]?.color,
                 }}
               />
             </div>
@@ -277,7 +270,7 @@ export function ActivitySummary({ summary }) {
                 <div key={type.type}>
                   <dt>
                     <span className="legend-dot" style={{ background: type.color }} />
-                    {type.label}
+                    <span>{type.label}</span>
                   </dt>
                   <dd>{formatDuration(type.minutes)}</dd>
                 </div>
@@ -306,7 +299,7 @@ export function BottomNav({ activeTab, onNavigate, onAdd }) {
             data-dialog-fallback
             key={item.id}
             onClick={onAdd}
-            aria-label="Add an activity"
+            aria-label="Log today"
           >
             <Icon name="plus" size={27} />
           </button>
