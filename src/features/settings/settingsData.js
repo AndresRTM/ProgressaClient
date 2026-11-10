@@ -1,3 +1,5 @@
+export const MAX_FAVORITES = 6;
+
 export const DEFAULT_SETTINGS = {
   favoriteSports: [
     "running",
