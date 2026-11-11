@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { setUnauthorizedHandler } from '../../services/api'
 import {
+  clearAppStorage,
   clearSession,
   getSession,
   reloadSession,
@@ -8,7 +9,10 @@ import {
   sessionExpiresIn,
   setSession,
 } from '../../services/authSession'
-import { login as loginRequest } from '../../services/authService'
+import {
+  deleteAccount as deleteAccountRequest,
+  login as loginRequest,
+} from '../../services/authService'
 import { AuthContext } from './useAuth'
 
 // setTimeout klarar högst ~24,8 dygn.
@@ -16,7 +20,7 @@ const MAX_TIMEOUT = 2_147_483_647
 
 export function AuthProvider({ children }) {
   const [session, setSessionState] = useState(getSession)
-  // Varför användaren loggades ut: null eller 'expired'. Visas på inloggningssidan.
+  // Varför användaren loggades ut: null, 'expired' eller 'deleted'. Visas på inloggningssidan.
   const [signedOutReason, setSignedOutReason] = useState(null)
 
   const endSession = useCallback((reason) => {
@@ -36,6 +40,22 @@ export function AuthProvider({ children }) {
   // Lokal utloggning: rensar token i webbläsaren. Anropet till POST /api/auth/logout
   // och utloggningsknappen hör till issue #11.
   const logout = useCallback(() => endSession(null), [endSession])
+
+  // Raderar kontot i backenden och sedan all lokal data, så att inget finns kvar i webbläsaren.
+  const deleteAccount = useCallback(
+    async (password) => {
+      try {
+        await deleteAccountRequest(password)
+      } catch (error) {
+        // 404: kontot finns redan inte, så vi städar upp lokalt ändå.
+        if (error?.response?.status !== 404) throw error
+      }
+      clearAppStorage()
+      window.history.replaceState(null, '', window.location.pathname)
+      endSession('deleted')
+    },
+    [endSession],
+  )
 
   // Backenden svarade 401 på ett inloggat anrop: token är ogiltig eller har gått ut.
   useEffect(() => setUnauthorizedHandler(() => endSession('expired')), [endSession])
@@ -69,8 +89,9 @@ export function AuthProvider({ children }) {
       signedOutReason,
       login,
       logout,
+      deleteAccount,
     }),
-    [session, signedOutReason, login, logout],
+    [session, signedOutReason, login, logout, deleteAccount],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

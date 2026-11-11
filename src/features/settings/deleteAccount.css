@@ -1,0 +1,74 @@
+.settings-menu-row.is-danger,
+.settings-menu-row.is-danger > svg {
+  color: #9a3c2e;
+}
+.settings-menu-row.is-danger .settings-menu-icon {
+  background: #fbede8;
+}
+.settings-menu-row.is-danger:hover .settings-menu-icon {
+  background: #f6ddd5;
+}
+.settings-account-email {
+  padding: 13px 0;
+  border-bottom: 1px solid var(--track);
+  font-size: 14px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.settings-account-email small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+.delete-account-error {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8e9e6;
+  color: #9a3c2e;
+  font-size: 13px;
+  line-height: 20px;
+}
+.delete-account-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 7px;
+}
+.delete-account-cancel,
+.delete-account-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 11px 10px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+.delete-account-cancel {
+  border: 1px solid #dce4d3;
+  background: transparent;
+}
+.delete-account-cancel:hover:not(:disabled) {
+  background: var(--green-light);
+}
+.delete-account-confirm {
+  background: #9a3c2e;
+  color: white;
+}
+.delete-account-confirm:hover:not(:disabled) {
+  background: #813123;
+}
+.delete-account-confirm:disabled,
+.delete-account-cancel:disabled {
+  opacity: 0.65;
+}
+@media (max-width: 360px) {
+  .delete-account-actions {
+    grid-template-columns: 1fr;
+  }
+}

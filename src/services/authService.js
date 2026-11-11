@@ -27,3 +27,20 @@ export function loginErrorMessage(error) {
       return 'Something went wrong on our side. Try again in a moment.'
   }
 }
+
+// DELETE /api/user/me  ->  204 raderat | 400 fel lösenord | 404 finns inte | 500
+export async function deleteAccount(password) {
+  await api.delete('user/me', { data: { password } })
+}
+
+export function deleteAccountErrorMessage(error) {
+  if (isNetworkError(error)) {
+    return "We can't reach Progressa right now. Your account hasn't been deleted."
+  }
+
+  if (error?.response?.status === 400) {
+    return 'That password isn’t right. Try again.'
+  }
+
+  return 'Your account couldn’t be deleted right now. Try again in a moment.'
+}
