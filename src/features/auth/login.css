@@ -1,0 +1,86 @@
+.login-page {
+  width: 100%;
+  max-width: 440px;
+  min-height: 100svh;
+  margin-inline: auto;
+  padding: 32px 20px 40px;
+  display: flex;
+  flex-direction: column;
+}
+.login-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: 40px 64px;
+}
+.login-main h1 {
+  font-size: 30px;
+  line-height: 38px;
+  font-weight: 600;
+  letter-spacing: -0.9px;
+}
+.login-main h1:focus {
+  outline: none;
+}
+.login-lead {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 22px;
+}
+.login-card {
+  margin-top: 28px;
+  padding: 24px 20px;
+  border-radius: 20px;
+  background: var(--surface);
+}
+.login-card .primary-button {
+  margin-top: 7px;
+}
+.login-card .primary-button:disabled {
+  background: #5d6862;
+}
+.login-password {
+  position: relative;
+  display: block;
+}
+.home-form .login-password input {
+  padding-right: 68px;
+}
+.login-reveal {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.login-reveal:hover {
+  background: var(--track);
+  color: var(--ink);
+}
+.home-form input[aria-invalid='true'] {
+  border-color: #c98a82;
+}
+.login-error,
+.login-notice {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 20px;
+}
+.login-error {
+  background: #f8e9e6;
+  color: #9b3e35;
+}
+.login-notice {
+  margin-top: 20px;
+  background: var(--green-light);
+  color: var(--ink);
+}
