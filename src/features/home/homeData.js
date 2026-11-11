@@ -12,6 +12,22 @@ export const INTENSITY_PACES = {
   hard: 'Hard pace',
 }
 export const NO_PACE = 'Not specified'
+export const INTENSITY_OPTIONS = [
+  { value: 'easy', label: 'Easy' },
+  { value: 'moderate', label: 'Moderate' },
+  { value: 'hard', label: 'Hard' },
+]
+
+export function intensityOf(activity) {
+  if (activity?.intensity === null) return null
+  if (Object.hasOwn(INTENSITY_PACES, activity?.intensity ?? '')) return activity.intensity
+  // Older saved activities only have a pace label, so read the intensity from it.
+  const pace = activity?.pace?.toLowerCase() || ''
+  if (pace.includes('hard') || pace.includes('challenge')) return 'hard'
+  if (pace.includes('moderate') || pace.includes('steady')) return 'moderate'
+  if (pace === 'unspecified' || pace === 'not specified') return null
+  return 'easy'
+}
 
 export const INITIAL_ACTIVITIES = [
   {
@@ -120,6 +136,16 @@ export function dateAtOffset(isoDate, offset) {
 export function startOfWeek(isoDate, weekStartsOn = 'mon') {
   const weekday = parseDate(isoDate).getDay()
   return dateAtOffset(isoDate, weekStartsOn === 'sun' ? -weekday : -((weekday + 6) % 7))
+}
+
+export function weeksBetween(fromWeekStart, toWeekStart) {
+  const days = (parseDate(toWeekStart) - parseDate(fromWeekStart)) / 86400000
+  return Math.round(days / 7)
+}
+
+export function dayTitle(isoDate) {
+  const date = parseDate(isoDate)
+  return `${longWeekday.format(date)}, ${date.getDate()} ${monthName.format(date)}`
 }
 
 export function profileInitials(name) {

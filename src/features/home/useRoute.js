@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 const pages = new Set([
+  'plan',
   'settings',
   'settings/logging',
   'settings/sports',
@@ -13,7 +14,11 @@ function currentPage() {
   return pages.has(page) ? page : 'home'
 }
 
-export default function useSettingsRoute() {
+function hashFor(page) {
+  return page === 'home' ? '#home' : `#/${page}`
+}
+
+export default function useRoute() {
   const [page, setPage] = useState(currentPage)
 
   useEffect(() => {
@@ -28,17 +33,16 @@ export default function useSettingsRoute() {
 
   function navigate(nextPage) {
     if (nextPage === currentPage()) return
-    const hash = nextPage === 'home' ? '#home' : `#/${nextPage}`
-    window.history.pushState({ progressaSettings: true }, '', hash)
+    window.history.pushState({ progressaRoute: true }, '', hashFor(nextPage))
     setPage(nextPage)
   }
 
   function goBack() {
-    if (window.history.state?.progressaSettings) {
+    if (window.history.state?.progressaRoute) {
       window.history.back()
     } else {
-      const parent = page === 'settings' ? 'home' : 'settings'
-      window.history.replaceState(null, '', parent === 'home' ? '#home' : `#/${parent}`)
+      const parent = page.startsWith('settings/') ? 'settings' : 'home'
+      window.history.replaceState(null, '', hashFor(parent))
       setPage(parent)
     }
   }

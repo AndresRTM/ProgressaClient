@@ -11,7 +11,12 @@ import {
   weekDays,
 } from './homeData'
 
-export function HomeHeader({ profileName, onProfile }) {
+export function HomeHeader({
+  profileName,
+  onProfile,
+  title = 'Make time for what moves you.',
+  subtitle = 'Your goals. Your rhythm.',
+}) {
   return (
     <header className="home-header" id="home">
       <div className="brand-row">
@@ -28,8 +33,8 @@ export function HomeHeader({ profileName, onProfile }) {
         </button>
       </div>
       <div className="welcome">
-        <h1>Make time for what moves you.</h1>
-        <p>Your goals. Your rhythm.</p>
+        <h1>{title}</h1>
+        <p>{subtitle}</p>
       </div>
     </header>
   )
@@ -100,12 +105,56 @@ export function ActivityRow({ activity, onClick, dayLabel, timeFormat, sportPict
   )
 }
 
+function weekTitle(weekOffset, thisWeekTitle) {
+  if (weekOffset === 0) return thisWeekTitle
+  if (weekOffset === 1) return 'Next week'
+  if (weekOffset === -1) return 'Last week'
+  return weekOffset > 0 ? `In ${weekOffset} weeks` : `${-weekOffset} weeks ago`
+}
+
+export function WeekHeading({ id, thisWeekTitle, weekStart, weekOffset, onChangeWeek, onThisWeek }) {
+  return (
+    <div className="card-heading">
+      <div>
+        <h2 id={id}>{weekTitle(weekOffset, thisWeekTitle)}</h2>
+        <div className="week-range-row">
+          <p className="week-range">{formatWeekRange(weekStart)}</p>
+          {weekOffset !== 0 && (
+            <button className="back-to-this-week" onClick={onThisWeek}>
+              <Icon name="rotate-ccw" size={12} />
+              Back to this week
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="week-arrows">
+        <button
+          className="icon-button round-button previous-week"
+          onClick={() => onChangeWeek(-1)}
+          aria-label="Previous week"
+        >
+          <Icon name="chevron-right" size={16} />
+        </button>
+        <button
+          className="icon-button round-button"
+          onClick={() => onChangeWeek(1)}
+          aria-label="Next week"
+        >
+          <Icon name="chevron-right" size={16} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function WeekCard({
   weekStart,
+  weekOffset,
   selectedDate,
   activities,
   onSelect,
-  onPlan,
+  onChangeWeek,
+  onThisWeek,
   onActivity,
   onAdd,
   timeFormat,
@@ -120,19 +169,11 @@ export function WeekCard({
       : new Date(`${selectedDate}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'long' })
   return (
     <section className="home-card week-card" aria-labelledby="week-title" id="week">
-      <div className="card-heading">
-        <div>
-          <h2 id="week-title">This week, your way</h2>
-          <p className="week-range">{formatWeekRange(weekStart)}</p>
-        </div>
-        <button
-          className="icon-button week-link"
-          onClick={onPlan}
-          aria-label="View your weekly plan"
-        >
-          <Icon name="chevron-right" size={18} />
-        </button>
-      </div>
+      <WeekHeading
+        id="week-title"
+        thisWeekTitle="This week, your way"
+        {...{ weekStart, weekOffset, onChangeWeek, onThisWeek }}
+      />
       <WeekDays {...{ weekStart, selectedDate, activities, onSelect }} />
       <div className="scheduled-list" aria-live="polite">
         {selectedActivities.length ? (
@@ -201,7 +242,7 @@ export function GoalsCard({ goals, summary, onAdd }) {
     <section className="home-card goals-card" aria-labelledby="goals-title" id="goals">
       <div className="card-heading">
         <h2 id="goals-title">Small goals. Real progress.</h2>
-        <button className="icon-button small-add" onClick={onAdd} aria-label="Add a goal">
+        <button className="icon-button round-button" onClick={onAdd} aria-label="Add a goal">
           <Icon name="plus" size={18} />
         </button>
       </div>

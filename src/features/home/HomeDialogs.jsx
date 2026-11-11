@@ -5,13 +5,9 @@ import SportPicture from '../settings/SportPicture'
 import DailyLogSummary from '../logging/DailyLogSummary'
 import { useSports } from '../activities/useSports'
 import { formatTime } from '../settings/formatTime'
-import { ActivityChart, ActivityRow, GoalRows, WeekDays } from './HomeCards'
-import { dateAtOffset, formatDuration, formatWeekRange, weekDays } from './homeData'
+import { ActivityChart, GoalRows } from './HomeCards'
+import { formatDuration } from './homeData'
 import './calendarActivity.css'
-
-function validFavoriteSports(favoriteSports, activityTypes) {
-  return [...new Set(favoriteSports)].filter((type) => Object.hasOwn(activityTypes, type))
-}
 
 export function AddGoalDialog({ onSave, onClose }) {
   const { activityTypes } = useSports()
@@ -93,115 +89,6 @@ export function AddGoalDialog({ onSave, onClose }) {
           <Icon name="plus" size={19} />
         </button>
       </form>
-    </Sheet>
-  )
-}
-
-export function PlanDialog({
-  weekStart,
-  selectedDate,
-  activities,
-  onSelect,
-  onActivity,
-  onAdd,
-  onClose,
-  timeFormat,
-  favoriteSports = [],
-  sportPictures,
-  deletedActivity,
-  onUndoDelete,
-}) {
-  const { activityTypes } = useSports()
-  const quickAddSports = validFavoriteSports(favoriteSports, activityTypes).slice(0, 3)
-
-  // Moving the selected day by a whole week keeps the same weekday highlighted.
-  function changeWeek(offset) {
-    onSelect(dateAtOffset(selectedDate, offset))
-  }
-
-  return (
-    <Sheet title="Your week, your way." onClose={onClose}>
-      {deletedActivity && onUndoDelete && (
-        <div className="calendar-deleted-banner" role="status">
-          <p>Activity deleted.</p>
-          <button type="button" onClick={onUndoDelete}>
-            <Icon name="rotate-ccw" size={17} />
-            Undo
-          </button>
-        </div>
-      )}
-      <div className="plan-week-heading">
-        <button
-          className="icon-button previous-week"
-          onClick={() => changeWeek(-7)}
-          aria-label="Previous week"
-        >
-          <Icon name="chevron-right" size={20} />
-        </button>
-        <p>{formatWeekRange(weekStart)}</p>
-        <button className="icon-button" onClick={() => changeWeek(7)} aria-label="Next week">
-          <Icon name="chevron-right" size={20} />
-        </button>
-      </div>
-      <WeekDays {...{ weekStart, selectedDate, activities, onSelect }} />
-      {quickAddSports.length > 0 && (
-        <div className="plan-favorites" aria-label="Favorite sports">
-          {quickAddSports.map((type) => (
-            <button
-              className="plan-favorite"
-              key={type}
-              onClick={() => onAdd(selectedDate, type)}
-              aria-label={`Add ${activityTypes[type].label} on ${selectedDate}`}
-            >
-              {sportPictures?.[type] ? (
-                <SportPicture
-                  sport={activityTypes[type]}
-                  picture={sportPictures[type]}
-                  size={26}
-                />
-              ) : (
-                <Icon name={activityTypes[type].icon} size={22} />
-              )}
-              <span className="plan-favorite-label">{activityTypes[type].label}</span>
-              <Icon name="plus" size={15} />
-            </button>
-          ))}
-        </div>
-      )}
-      <div className="plan-list">
-        {weekDays(weekStart).map((day) => {
-          const dayActivities = activities
-            .filter((activity) => activity.date === day.date)
-            .sort((a, b) => a.time.localeCompare(b.time))
-          return (
-            <div className="plan-day" key={day.date}>
-              <h3>
-                {day.longDay} <span>{day.dayNumber}</span>
-              </h3>
-              {dayActivities.length ? (
-                dayActivities.map((activity) => (
-                  <ActivityRow
-                    key={activity.id}
-                    activity={activity}
-                    onClick={onActivity}
-                    timeFormat={timeFormat}
-                    sportPictures={sportPictures}
-                  />
-                ))
-              ) : (
-                <button className="plan-rest-day" onClick={() => onAdd(day.date)}>
-                  Make a little time
-                  <Icon name="plus" size={16} />
-                </button>
-              )}
-            </div>
-          )
-        })}
-      </div>
-      <button className="primary-button" onClick={() => onAdd(selectedDate)}>
-        Add activity
-        <Icon name="plus" size={19} />
-      </button>
     </Sheet>
   )
 }
