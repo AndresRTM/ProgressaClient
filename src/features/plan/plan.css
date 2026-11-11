@@ -1,0 +1,16 @@
+.plan-coming-up .scheduled-activity {
+  background: var(--page);
+}
+.plan-coming-up .scheduled-activity:hover {
+  background: var(--track);
+}
+.plan-coming-up .activity-arrow {
+  background: var(--surface);
+  color: var(--ink);
+}
+.plan-nothing-planned {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
+}

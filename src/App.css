@@ -108,9 +108,37 @@
   line-height: 16px;
   letter-spacing: -0.2px;
 }
-.week-link {
-  margin-right: -8px;
-  color: var(--muted);
+.week-range-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+.week-range-row .week-range {
+  margin-top: 0;
+}
+.back-to-this-week {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--green-light);
+  color: var(--ink);
+  font-size: 10px;
+  line-height: 15px;
+  font-weight: 500;
+}
+.back-to-this-week:hover {
+  background: #e3f0ce;
+}
+.week-arrows {
+  display: flex;
+  gap: 6px;
+}
+.previous-week svg {
+  transform: rotate(180deg);
 }
 .week-days {
   display: grid;
@@ -278,10 +306,11 @@
 .goals-card .card-heading {
   min-height: 26px;
 }
-.small-add {
-  width: 26px;
-  height: 26px;
+.round-button {
+  width: 28px;
+  height: 28px;
   background: var(--page);
+  color: var(--ink);
 }
 .goal-list {
   display: flex;
@@ -633,79 +662,6 @@
 }
 .sheet .goal-label {
   font-size: 13px;
-}
-.plan-week-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 20px;
-  font-size: 14px;
-  font-weight: 500;
-}
-.previous-week svg {
-  transform: rotate(180deg);
-}
-.plan-favorites {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 20px;
-}
-.plan-favorite-label {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-size: 12px;
-}
-.plan-favorite {
-  max-width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 11px;
-  border-radius: 12px;
-  background: var(--page);
-  font-size: 12px;
-}
-.plan-favorite svg { flex-shrink: 0; }
-.plan-favorite:hover {
-  background: var(--green-light);
-}
-.plan-list {
-  margin-top: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-.plan-day {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.plan-day h3 {
-  margin-bottom: 2px;
-  font-size: 13px;
-  line-height: 20px;
-  font-weight: 600;
-}
-.plan-day h3 span {
-  margin-left: 3px;
-  color: var(--muted);
-  font-weight: 400;
-}
-.plan-day .scheduled-activity {
-  min-height: 66px;
-}
-.plan-rest-day {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 12px;
-  border: 1px dashed #dce4d3;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--muted);
-  font-size: 12px;
 }
 .activity-detail-icon {
   display: flex;

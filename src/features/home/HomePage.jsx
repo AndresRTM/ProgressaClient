@@ -1,23 +1,27 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import SettingsPage from '../settings/SettingsPage'
 import useSettings from '../settings/useSettings'
-import useSettingsRoute from '../settings/useSettingsRoute'
 import useSportPictures from '../settings/useSportPictures'
 import AddActivityDialog from '../logging/AddActivityDialog'
 import LogTodayDialog from '../logging/LogTodayDialog'
 import DailyLogSummary from '../logging/DailyLogSummary'
 import { useSports } from '../activities/useSports'
+import PlanPage from '../plan/PlanPage'
 import { ActivitySummary, BottomNav, GoalsCard, HomeHeader, WeekCard } from './HomeCards'
 import {
   ActivityDetailDialog,
   ActivityDialog,
   AddGoalDialog,
   GoalsDialog,
-  PlanDialog,
   ProfileDialog,
 } from './HomeDialogs'
-import { calculateSummary, DEMO_TODAY, startOfWeek } from './homeData'
+import { calculateSummary, dateAtOffset, DEMO_TODAY, startOfWeek, weeksBetween } from './homeData'
 import useHomeData from './useHomeData'
+import useRoute from './useRoute'
+
+// shortcut: "Repeat every week" adds separate copies for the coming weeks. Store a real
+// weekly rule instead if repeated sessions need to be edited or stopped together.
+const REPEAT_WEEKS = 12
 
 export default function HomePage() {
   const {
@@ -39,8 +43,8 @@ export default function HomePage() {
   const { activityTypes } = useSports()
   const preferences = useSettings()
   const pictureStorage = useSportPictures()
-  const { page, navigate: navigatePage, goBack } = useSettingsRoute()
-  const isSettings = page !== 'home'
+  const { page, navigate: navigatePage, goBack } = useRoute()
+  const isSettings = page.startsWith('settings')
   const previousPage = useRef(page)
   const homeScroll = useRef(0)
   const { timeFormat, weekStart: weekStartsOn } = preferences.settings.units
@@ -50,6 +54,16 @@ export default function HomePage() {
   const [deletedActivity, setDeletedActivity] = useState(null)
   const dialogType = dialog?.type
   const weekStart = startOfWeek(selectedDate, weekStartsOn)
+  const thisWeekStart = startOfWeek(DEMO_TODAY, weekStartsOn)
+  const weekNavigation = {
+    weekOffset: weeksBetween(thisWeekStart, weekStart),
+    // Other weeks open on their first day; coming back to this week opens on today.
+    onChangeWeek: (delta) => {
+      const nextWeek = dateAtOffset(weekStart, delta * 7)
+      setSelectedDate(nextWeek === thisWeekStart ? DEMO_TODAY : nextWeek)
+    },
+    onThisWeek: () => setSelectedDate(DEMO_TODAY),
+  }
   const summary = calculateSummary(activities, weekStart, activityTypes)
   const detailActivity = ['detail', 'edit-activity'].includes(dialog?.type)
     ? activities.find((activity) => activity.id === dialog.activity.id)
@@ -73,13 +87,16 @@ export default function HomePage() {
   }
 
   useLayoutEffect(() => {
-    if (page === 'home' && previousPage.current !== 'home') {
+    if (!isSettings && previousPage.current.startsWith('settings')) {
       window.scrollTo(0, homeScroll.current)
       if (dialog?.type !== 'log-today')
         document.querySelector('[data-settings-trigger]')?.focus({ preventScroll: true })
     }
+    else if (page !== previousPage.current) {
+      window.scrollTo(0, 0)
+    }
     previousPage.current = page
-  }, [page, dialog?.type])
+  }, [page, isSettings, dialog?.type])
 
   useEffect(() => {
     if (!notice) return
@@ -88,7 +105,7 @@ export default function HomePage() {
   }, [notice])
 
   useEffect(() => {
-    if (!deletedActivity || (dialogType && dialogType !== 'plan')) return
+    if (!deletedActivity || dialogType) return
     const timeout = setTimeout(() => setDeletedActivity(null), 20000)
     return () => clearTimeout(timeout)
   }, [deletedActivity, dialogType])
@@ -109,16 +126,18 @@ export default function HomePage() {
   const showUndo = Boolean(deletedActivity && !dialog)
 
   function navigate(tab) {
-    if (tab === 'home') {
-      closeDialog()
+    closeDialog()
+    if (tab === 'goals' || tab === 'activity') {
+      setDialog({ type: tab })
+    } else if (tab !== page) {
+      navigatePage(tab)
+    } else {
       window.scrollTo({
         top: 0,
         behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
           ? 'instant'
           : 'smooth',
       })
-    } else {
-      setDialog({ type: tab })
     }
   }
 
@@ -149,22 +168,43 @@ export default function HomePage() {
         />
       ) : (
         <>
-          <HomeHeader profileName={profileName} onProfile={openSettings} />
-          <main className="home-content" id="main-content" tabIndex={-1}>
-            <WeekCard
-              {...{ weekStart, selectedDate, activities, timeFormat }}
-              sportPictures={pictureStorage.pictures}
-              onSelect={setSelectedDate}
-              onPlan={() => setDialog({ type: 'plan' })}
-              onActivity={(activity) => setDialog({ type: 'detail', activity })}
-              onAdd={() => openActivityForm()}
-            />
-            <GoalsCard {...{ goals, summary }} onAdd={() => setDialog({ type: 'add-goal' })} />
-            <DailyLogSummary log={dailyLogs[selectedDate]} units={preferences.settings.units} />
-            <ActivitySummary summary={summary} />
-          </main>
+          {page === 'plan' ? (
+            <>
+              <HomeHeader
+                profileName={profileName}
+                onProfile={openSettings}
+                title="Shape a week that fits you."
+                subtitle="Pick a day. Plan the move."
+              />
+              <PlanPage
+                {...{ weekStart, selectedDate, activities, timeFormat }}
+                {...weekNavigation}
+                sportPictures={pictureStorage.pictures}
+                onSelect={setSelectedDate}
+                onActivity={(activity) => setDialog({ type: 'detail', activity })}
+                onAdd={openActivityForm}
+              />
+            </>
+          ) : (
+            <>
+              <HomeHeader profileName={profileName} onProfile={openSettings} />
+              <main className="home-content" id="main-content" tabIndex={-1}>
+                <WeekCard
+                  {...{ weekStart, selectedDate, activities, timeFormat }}
+                  {...weekNavigation}
+                  sportPictures={pictureStorage.pictures}
+                  onSelect={setSelectedDate}
+                  onActivity={(activity) => setDialog({ type: 'detail', activity })}
+                  onAdd={() => openActivityForm()}
+                />
+                <GoalsCard {...{ goals, summary }} onAdd={() => setDialog({ type: 'add-goal' })} />
+                <DailyLogSummary log={dailyLogs[selectedDate]} units={preferences.settings.units} />
+                <ActivitySummary summary={summary} />
+              </main>
+            </>
+          )}
           <BottomNav
-            activeTab={['plan', 'goals', 'activity'].includes(dialog?.type) ? dialog.type : 'home'}
+            activeTab={['goals', 'activity'].includes(dialog?.type) ? dialog.type : page}
             onNavigate={navigate}
             onAdd={() => setDialog({ type: 'log-today', date: selectedDate })}
           />
@@ -183,7 +223,7 @@ export default function HomePage() {
           {dataError}
         </p>
       )}
-      {dialog?.type === 'log-today' && page === 'home' && (
+      {dialog?.type === 'log-today' && !isSettings && (
         <LogTodayDialog
           date={dialog.date}
           initialValues={dialog.initialValues}
@@ -213,16 +253,25 @@ export default function HomePage() {
           key="add-activity"
           selectedDate={dialog.date}
           activityType={dialog.activityType}
+          weekStartsOn={weekStartsOn}
           favoriteSports={preferences.settings.favoriteSports}
           sportPictures={pictureStorage.pictures}
           onFavoriteChange={preferences.setFavoriteSports}
           onClose={closeDialog}
-          onSave={(activity) => {
+          onSave={(activity, repeatWeekly) => {
             const added = addActivity(activity)
             if (!added) return null
-            setSelectedDate(activity.date)
+            if (repeatWeekly) {
+              for (let week = 1; week < REPEAT_WEEKS; week += 1) {
+                addActivity({ ...activity, date: dateAtOffset(activity.date, week * 7) })
+              }
+            }
+            const weekday = new Date(`${added.date}T12:00:00`).toLocaleDateString('en-GB', {
+              weekday: 'long',
+            })
+            setSelectedDate(added.date)
             closeDialog()
-            setNotice('Activity added to your week.')
+            setNotice(`${activityTypes[added.type].label} added to ${weekday}.`)
             return added
           }}
         />
@@ -243,6 +292,7 @@ export default function HomePage() {
           key={`edit-${detailActivity.id}`}
           activity={detailActivity}
           selectedDate={detailActivity.date}
+          weekStartsOn={weekStartsOn}
           favoriteSports={preferences.settings.favoriteSports}
           sportPictures={pictureStorage.pictures}
           onFavoriteChange={preferences.setFavoriteSports}
@@ -257,23 +307,6 @@ export default function HomePage() {
           }}
         />
       )}
-      {dialog?.type === 'plan' && (
-        <PlanDialog
-          key="plan"
-          {...{ weekStart, selectedDate, activities, timeFormat }}
-          favoriteSports={preferences.settings.favoriteSports}
-          sportPictures={pictureStorage.pictures}
-          deletedActivity={deletedActivity}
-          onUndoDelete={undoDelete}
-          onSelect={setSelectedDate}
-          onActivity={(activity) => {
-            setSelectedDate(activity.date)
-            setDialog({ type: 'detail', activity, returnTo: 'plan' })
-          }}
-          onAdd={openActivityForm}
-          onClose={closeDialog}
-        />
-      )}
       {dialog?.type === 'detail' && detailActivity && (
         <ActivityDetailDialog
           key="detail"
@@ -286,8 +319,7 @@ export default function HomePage() {
             if (!removed) return null
             setDeletedActivity(removed)
             setNotice('')
-            if (dialog.returnTo === 'plan') setDialog({ type: 'plan' })
-            else closeDialog()
+            closeDialog()
             return removed
           }}
           onSetDone={(activity, done) => {
@@ -295,7 +327,7 @@ export default function HomePage() {
             if (updated) setNotice(done ? 'Activity marked as done.' : 'Activity marked as upcoming.')
             return updated
           }}
-          onClose={() => dialog.returnTo === 'plan' ? setDialog({ type: 'plan' }) : closeDialog()}
+          onClose={closeDialog}
         />
       )}
       {dialog?.type === 'goals' && (

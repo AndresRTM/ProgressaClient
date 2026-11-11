@@ -1,0 +1,191 @@
+.add-session {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.add-session fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.add-session-label {
+  display: block;
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.add-session-all-sports,
+.add-session-back {
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 14px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.add-session-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.add-session-heading .add-session-label {
+  margin-bottom: 0;
+}
+.add-session-week {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 14px;
+}
+.add-session-week button {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--page);
+  color: var(--ink);
+}
+.add-session-week button:hover:not(:disabled) {
+  background: var(--track);
+}
+.add-session-week button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.add-session-back {
+  margin-bottom: 16px;
+}
+.add-session-sports {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.add-session-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+}
+.add-session-tile {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 2px;
+  border-radius: 14px;
+  background: var(--page);
+  font-size: 11px;
+  line-height: 15px;
+  transition: background 0.18s;
+}
+.add-session-tile > span:last-child {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.add-session-tile:not([aria-pressed='true'], :disabled):hover {
+  background: var(--track);
+}
+.add-session-tile[aria-pressed='true'] {
+  background: var(--green);
+}
+.add-session-tile:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.add-session-days .add-session-tile {
+  padding: 7px 0;
+  border-radius: 12px;
+}
+.add-session-days small {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 12px;
+}
+.add-session-days .add-session-tile[aria-pressed='true'] small {
+  color: var(--ink);
+  font-weight: 600;
+}
+.add-session-days span {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.add-session-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.add-session-fields label {
+  min-width: 0;
+}
+.add-session-fields input,
+.add-session-fields select {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background-color: var(--page);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+}
+.add-session-fields select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%237c847f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 4.5 3 3 3-3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+.add-session-intensity {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.add-session-intensity button {
+  height: 38px;
+  border-radius: 20px;
+  background: var(--page);
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.18s;
+}
+.add-session-intensity button:hover {
+  background: var(--track);
+}
+.add-session-intensity button[aria-pressed='true'] {
+  background: var(--green);
+}
+.add-session-repeat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+}
+.add-session-repeat small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 400;
+}
