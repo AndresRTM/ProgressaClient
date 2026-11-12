@@ -8,6 +8,7 @@ import { formatTime } from "../settings/formatTime";
 import { ActivityChart } from "./HomeCards";
 import { formatDuration } from "./homeData";
 import "./calendarActivity.css";
+import "./goalsDialog.css";
 import {
   createGoalActivity,
   deleteGoalFromApi,
@@ -41,7 +42,7 @@ export function AddGoalDialog({goal, onSave, onClose }) {
       .then(setActivities)
       .catch(() => {
         if (!controller.signal.aborted) {
-          setActivityError("Det gick inte att hämta aktiviteterna.");
+          setActivityError("Could not load activities.");
         }
       });
 
@@ -74,7 +75,7 @@ export function AddGoalDialog({goal, onSave, onClose }) {
 
     if (endDate < startDate) {
       setError(
-        "Slutdatumet måste vara samma dag som startdatumet eller senare.",
+        "End date must be on or after the start date.",
       );
       return;
     }
@@ -82,8 +83,8 @@ export function AddGoalDialog({goal, onSave, onClose }) {
     if (!Number.isInteger(target) || target < 1 || target > 2147483647) {
       setError(
         isDuration
-          ? "Ange en giltig måltid på minst en minut."
-          : "Ange ett giltigt målvärde större än noll.",
+          ? "Enter a duration of at least one minute."
+          : "Enter a target greater than zero.",
       );
       return;
     }
@@ -101,7 +102,7 @@ export function AddGoalDialog({goal, onSave, onClose }) {
         endDate: `${endDate}T23:59:59`,
       });
     } catch {
-      setError("Det gick inte att spara målet. Försök igen.");
+      setError("Could not save the goal. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -441,35 +442,95 @@ export function GoalsDialog({
       await deleteGoalFromApi(goal.id);
       onRemoved(goal.id);
     } catch {
-      setError("Det gick inte att ta bort målet. Försök igen.");
+      setError("Could not remove the goal. Please try again.");
     } finally {
       setDeleting(false);
     }
   }
 
   return (
-    <Sheet title="Small goals. Real progress." onClose={onClose}>
-      {error && <p role="alert">{error}</p>}
-      {goalsError && <p role="alert">{goalsError}</p>}
-      {!goalsError && goals === null && <p>Loading goals…</p>}
-      {goals?.length === 0 && <p>No goals yet.</p>}
-      {goals?.map((goal) => (
-        <div key={goal.id}>
-          <p>
-            {goal.title} · Target: {goal.target}
-          </p>
-          <button type="button" onClick={() => onEdit(goal)}>
-            Edit
-          </button>
-          <button
-            type="button"
-            onClick={() => removeGoal(goal)}
-            disabled={deleting}
-          >
-            Remove
-          </button>
-        </div>
-      ))}
+    <Sheet
+      title="Small goals. Real progress."
+      onClose={onClose}
+      className="goals-dialog"
+    >
+      <div
+        className="goals-dialog-list"
+        role="region"
+        aria-label="Goals"
+        tabIndex={0}
+      >
+        {error && <p role="alert">{error}</p>}
+        {goalsError && <p role="alert">{goalsError}</p>}
+        {!goalsError && goals === null && <p>Loading goals…</p>}
+        {goals?.length === 0 && <p>No goals yet.</p>}
+
+        {goals?.map((goal) => {
+          const hasProgress = Number.isFinite(goal.progress) && goal.target > 0;
+          const isDuration = goal.metric === 2;
+          const percent = hasProgress
+            ? Math.min(100, (goal.progress / goal.target) * 100)
+            : 0;
+
+          const current = isDuration
+            ? formatDuration(goal.progress)
+            : goal.progress;
+          const target = isDuration ? formatDuration(goal.target) : goal.target;
+
+          return (
+            <div
+              className="goal-dialog-card"
+              data-metric={goal.metric}
+              key={goal.id}
+            >
+              {hasProgress ? (
+                <div
+                  className="goal-dialog-ring"
+                  style={{ "--goal-progress": `${percent}%` }}
+                  role="progressbar"
+                  aria-label={goal.title}
+                  aria-valuemin={0}
+                  aria-valuemax={goal.target}
+                  aria-valuenow={Math.min(goal.progress, goal.target)}
+                  aria-valuetext={`${current} of ${target}`}
+                >
+                  <span>
+                    {current}/{isDuration && <br />}
+                    {target}
+                  </span>
+                </div>
+              ) : (
+                <div className="goal-dialog-ring goal-dialog-ring--legacy">
+                  <span>
+                    Target
+                    <br />
+                    {target}
+                  </span>
+                </div>
+              )}
+
+              <div className="goal-dialog-card-content">
+                <h3>{goal.title}</h3>
+                <div className="goal-dialog-actions">
+                  <button type="button" onClick={() => onEdit(goal)}>
+                    <Icon name="edit" size={17} />
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeGoal(goal)}
+                    disabled={deleting}
+                  >
+                    <Icon name="trash" size={17} />
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       <button className="primary-button" type="button" onClick={onAdd}>
         Add goal
       </button>

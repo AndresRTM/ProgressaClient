@@ -1,0 +1,111 @@
+.sheet.goals-dialog {
+  inset: 0;
+  margin: auto;
+  width: min(calc(100% - 32px), 440px);
+  max-height: 85dvh;
+  overflow: hidden;
+  border-radius: 24px;
+}
+
+.goals-dialog .sheet-panel {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  max-height: 85dvh;
+}
+
+.goals-dialog .sheet-heading,
+.goals-dialog .sheet-panel > .primary-button {
+  flex-shrink: 0;
+}
+
+.goals-dialog-list {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+.goals-dialog .sheet-panel > .primary-button {
+  margin-top: 16px;
+  justify-content: center;
+}
+
+.goal-dialog-card {
+  --goal-color: var(--muted);
+  --goal-surface: color-mix(in srgb, var(--goal-color) 9%, white);
+  --goal-track: color-mix(in srgb, var(--goal-color) 25%, white);
+
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--goal-track);
+  border-radius: 16px;
+  background: var(--goal-surface);
+}
+
+.goal-dialog-card + .goal-dialog-card {
+  margin-top: 10px;
+}
+
+.goal-dialog-card[data-metric="1"] {
+  --goal-color: var(--running);
+}
+
+.goal-dialog-card[data-metric="2"] {
+  --goal-color: var(--strength);
+}
+
+.goal-dialog-card[data-metric="3"] {
+  --goal-color: var(--swimming);
+}
+
+.goal-dialog-ring {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, var(--goal-surface) 81%, transparent 83%),
+    conic-gradient(var(--goal-color) var(--goal-progress), var(--goal-track) 0);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.goal-dialog-ring--legacy {
+  background: var(--goal-track);
+}
+
+.goal-dialog-card-content h3 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.goal-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin-top: 14px;
+}
+
+.goal-dialog-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 34px;
+  padding: 4px 8px;
+  border: 1px solid #d5d9d4;
+  border-radius: 7px;
+  background: transparent;
+  font-size: 13px;
+}
+
+.goal-dialog-actions button:hover:enabled {
+  background: #f0f2ef;
+}
