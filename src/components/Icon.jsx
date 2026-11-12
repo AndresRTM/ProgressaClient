@@ -1,6 +1,8 @@
 const icons = {
-  'chevron-left': <path d="m15 5-7 7 7 7" />,
-  star: <path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2-4.5-4.4 6.3-.9Z" />,
+  "chevron-left": <path d="m15 5-7 7 7 7" />,
+  star: (
+    <path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2-4.5-4.4 6.3-.9Z" />
+  ),
   clipboard: (
     <>
       <rect x="5" y="5" width="14" height="16" rx="2" />
@@ -42,7 +44,7 @@ const icons = {
       <path d="m3 17 5-5 4 4 3-3 6 6" />
     </>
   ),
-  'rotate-ccw': (
+  "rotate-ccw": (
     <>
       <path d="M3 10a9 9 0 1 1 2.4 8.2M3 4v6h6" />
     </>
@@ -54,13 +56,13 @@ const icons = {
       <path d="m16 16 5 5" />
     </>
   ),
-  'minus-circle': (
+  "minus-circle": (
     <>
       <circle cx="12" cy="12" r="9" />
       <path d="M8 12h8" />
     </>
   ),
-  'plus-circle': (
+  "plus-circle": (
     <>
       <circle cx="12" cy="12" r="9" />
       <path d="M8 12h8m-4-4v8" />
@@ -68,7 +70,10 @@ const icons = {
   ),
   grip: (
     <>
-      <path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" strokeWidth="3" />
+      <path
+        d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01"
+        strokeWidth="3"
+      />
     </>
   ),
   yoga: (
@@ -92,7 +97,13 @@ const icons = {
   ),
   tennis: (
     <>
-      <ellipse cx="14.5" cy="8.5" rx="6" ry="7.5" transform="rotate(42 14.5 8.5)" />
+      <ellipse
+        cx="14.5"
+        cy="8.5"
+        rx="6"
+        ry="7.5"
+        transform="rotate(42 14.5 8.5)"
+      />
       <path d="m10 14-6 7-2-2 6-7m3-8 7 7M9 7l6 6m-5-1 6-7m-3 9 6-7" />
     </>
   ),
@@ -141,8 +152,8 @@ const icons = {
       <path d="m3 11 5-5 5 4 8-8m-5 0h5v5" />
     </>
   ),
-  'chevron-right': <path d="m9 5 7 7-7 7" />,
-  'arrow-right': <path d="M5 12h14m-6-6 6 6-6 6" />,
+  "chevron-right": <path d="m9 5 7 7-7 7" />,
+  "arrow-right": <path d="M5 12h14m-6-6 6 6-6 6" />,
   close: <path d="m6 6 12 12M6 18 18 6" />,
   check: <path d="m5 12 4 4L19 6" />,
   swim: (
@@ -172,8 +183,11 @@ const icons = {
       <path d="m5 16 5-8 4 8H5m5-8h6l3 8M8 8h4m4-4h2l1 4" />
     </>
   ),
+  "log-out": (
+    <path d="M10 5H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h5M9 12h11m-4-4 4 4-4 4" />
+  ),
   trash: <path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v6m4-6v6" />,
-}
+};
 
 export default function Icon({ name, size = 24, className = '', ...props }) {
   return (

@@ -420,7 +420,7 @@ export default function HomePage() {
               );
               setDialog({ type: "goals" });
             } catch {
-              window.alert("Det gick inte att spara ändringarna. Försök igen.");
+              window.alert("Could not save your changes. Please try again..");
             }
           }}
         />

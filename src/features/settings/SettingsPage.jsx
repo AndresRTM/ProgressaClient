@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import Icon from '../../components/Icon'
+import api from '../../services/api'
 import { useAuth } from '../auth/useAuth'
 import { profileInitials } from '../home/homeData'
 import DeleteAccountDialog from './DeleteAccountDialog'
@@ -50,7 +51,8 @@ export default function SettingsPage({
     updateTarget,
     setFavoriteSports,
   } = preferences
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const headingRef = useRef(null)
   const [title, subtitle] = pageHeadings[page] || pageHeadings.settings
@@ -67,6 +69,18 @@ export default function SettingsPage({
   if (imperial) measurementSystem = 'Imperial'
   const unitSummary = `${measurementSystem} · ${settings.units.energy === 'kj' ? 'kJ' : 'kcal'}, g, ${settings.units.distance}`
 
+  async function handleLogout() {
+    setIsLoggingOut(true);
+
+    try {
+      await api.post("auth/logout");
+    } catch {
+      // Den lokala utloggningen slutförs även om API-anropet misslyckas.
+    } finally {
+      logout();
+    }
+  }
+
   useLayoutEffect(() => {
     window.scrollTo(0, 0)
     headingRef.current?.focus({ preventScroll: true })
@@ -78,7 +92,7 @@ export default function SettingsPage({
         <button
           className="settings-back"
           onClick={onBack}
-          aria-label={page === 'settings' ? 'Back to home' : 'Go back'}
+          aria-label={page === "settings" ? "Back to home" : "Go back"}
         >
           <Icon name="chevron-left" size={20} />
         </button>
@@ -88,17 +102,25 @@ export default function SettingsPage({
         {subtitle && <p>{subtitle}</p>}
       </header>
       <main id="settings-content" tabIndex={-1}>
-        {page === 'settings' && (
+        {page === "settings" && (
           <div className="settings-sections">
-            <button className="settings-card settings-profile" onClick={onProfile}>
-              <span className="settings-avatar">{profileInitials(profileName)}</span>
+            <button
+              className="settings-card settings-profile"
+              onClick={onProfile}
+            >
+              <span className="settings-avatar">
+                {profileInitials(profileName)}
+              </span>
               <span className="settings-menu-copy">
                 <strong>Your profile</strong>
                 <small>Name, photo and age</small>
               </span>
               <Icon name="chevron-right" size={18} />
             </button>
-            <section className="settings-card settings-menu" aria-labelledby="your-app">
+            <section
+              className="settings-card settings-menu"
+              aria-labelledby="your-app"
+            >
               <h2 className="settings-section-label" id="your-app">
                 Your app
               </h2>
@@ -112,13 +134,13 @@ export default function SettingsPage({
                 icon="clipboard"
                 title="Logging"
                 description="Training · Calories · Protein · Sleep"
-                onClick={() => navigate('settings/logging')}
+                onClick={() => navigate("settings/logging")}
               />
               <MenuRow
                 icon="star"
                 title="Favorite sports"
                 description={`${settings.favoriteSports.length} selected`}
-                onClick={() => navigate('settings/sports')}
+                onClick={() => navigate("settings/sports")}
               />
               <MenuRow
                 icon="bell"
@@ -129,19 +151,22 @@ export default function SettingsPage({
                   settings.notifications.weekly ||
                   settings.notifications.goalReached ||
                   settings.notifications.missed
-                    ? 'Reminders on'
-                    : 'Reminders off'
+                    ? "Reminders on"
+                    : "Reminders off"
                 }
-                onClick={() => navigate('settings/notifications')}
+                onClick={() => navigate("settings/notifications")}
               />
               <MenuRow
                 icon="ruler"
                 title="Units"
                 description={unitSummary}
-                onClick={() => navigate('settings/units')}
+                onClick={() => navigate("settings/units")}
               />
             </section>
-            <section className="settings-card settings-menu" aria-labelledby="your-account">
+            <section
+              className="settings-card settings-menu"
+              aria-labelledby="your-account"
+            >
               <h2 className="settings-section-label" id="your-account">
                 Account
               </h2>
@@ -157,10 +182,22 @@ export default function SettingsPage({
                 danger
               />
             </section>
+            <button
+              type="button"
+              className="settings-card settings-profile settings-logout"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+            >
+              <span className="settings-menu-copy">
+                <strong>{isLoggingOut ? "Logging out…" : "Log out"}</strong>
+              </span>
+            </button>
           </div>
         )}
-        {confirmDelete && <DeleteAccountDialog onClose={() => setConfirmDelete(false)} />}
-        {page === 'settings/logging' && (
+        {confirmDelete && (
+          <DeleteAccountDialog onClose={() => setConfirmDelete(false)} />
+        )}
+        {page === "settings/logging" && (
           <LoggingSettings
             value={settings.logging}
             targets={settings.targets}
@@ -169,23 +206,26 @@ export default function SettingsPage({
             sportPictures={pictureStorage.pictures}
             onChange={updateLogging}
             onTargetChange={updateTarget}
-            onFavorites={() => navigate('settings/sports')}
+            onFavorites={() => navigate("settings/sports")}
           />
         )}
-        {page === 'settings/notifications' && (
-          <NotificationsSettings value={settings.notifications} onChange={updateNotifications} />
+        {page === "settings/notifications" && (
+          <NotificationsSettings
+            value={settings.notifications}
+            onChange={updateNotifications}
+          />
         )}
-        {page === 'settings/sports' && (
+        {page === "settings/sports" && (
           <SportSettings
             value={settings.favoriteSports}
             onChange={setFavoriteSports}
             pictureStorage={pictureStorage}
           />
         )}
-        {page === 'settings/units' && (
+        {page === "settings/units" && (
           <UnitsSettings value={settings.units} onChange={updateUnits} />
         )}
       </main>
     </div>
-  )
+  );
 }

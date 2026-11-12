@@ -247,7 +247,7 @@ export function GoalRows({ goals }) {
           ? goal.metric === 2
             ? `${formatDuration(goal.progress)}/${formatDuration(goal.target)}`
             : `${goal.progress}/${goal.target}`
-          : `Målvärde: ${goal.target}`;
+          : `Target: ${goal.target}`;
 
         return (
           <div className="goal-row" key={goal.id}>
@@ -294,15 +294,15 @@ export function GoalsCard({ goals, goalsError, onAdd }) {
           className="icon-button round-button"
           type="button"
           onClick={onAdd}
-          aria-label="Lägg till ett mål"
+          aria-label="Add a goal"
         >
           <Icon name="plus" size={18} />
         </button>
       </div>
 
       {goalsError && <p role="alert">{goalsError}</p>}
-      {!goalsError && goals === null && <p>Laddar mål…</p>}
-      {goals?.length === 0 && <p>Inga mål än.</p>}
+      {!goalsError && goals === null && <p>Loading goals…</p>}
+      {goals?.length === 0 && <p>No goals yet.</p>}
       {goals?.length > 0 && <GoalRows goals={goals} />}
     </section>
   );

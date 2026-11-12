@@ -17,7 +17,7 @@ export default function AddGoalActivityDialog({ onSave, onClose }) {
     try {
       await onSave(name);
     } catch {
-      setError("Det gick inte att lägga till aktiviteten. Försök igen.");
+      setError("Could not add the activity. Please try again.");
     } finally {
       setSaving(false);
     }
