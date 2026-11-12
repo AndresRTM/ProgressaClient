@@ -119,6 +119,10 @@ function toISODate(date) {
   ].join('-')
 }
 
+export function getToday() {
+  return toISODate(new Date())
+}
+
 export function formatDuration(minutes) {
   const total = Math.max(0, Math.round(Number(minutes) || 0))
   const hours = Math.floor(total / 60)

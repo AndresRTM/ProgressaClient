@@ -3,7 +3,7 @@ import SportPicture from "../settings/SportPicture";
 import { useSports } from "../activities/useSports";
 import { formatTime } from "../settings/formatTime";
 import {
-  DEMO_TODAY,
+  getToday,
   formatDuration,
   formatWeekRange,
   profileInitials,
@@ -50,13 +50,17 @@ export function WeekDays({ weekStart, selectedDate, activities, onSelect }) {
         const doneCount = scheduled.filter(
           (activity) => activity.logged,
         ).length;
-        const types = [...new Set(scheduled.map((activity) => activity.type))];
+        const types = [
+          ...new Set(
+            scheduled.map((activity) => activity.type ?? activity.categoryName),
+          ),
+        ];
         return (
           <button
             className={`day-button${selectedDate === day.date ? " is-selected" : ""}`}
             key={day.date}
             onClick={() => onSelect(day.date)}
-            aria-label={`${day.longDay}, ${day.dayNumber} ${new Date(`${day.date}T12:00:00`).toLocaleDateString("en-GB", { month: "long" })}${day.date === DEMO_TODAY ? ", today" : ""}, ${scheduled.length - doneCount} upcoming, ${doneCount} done`}
+            aria-label={`${day.longDay}, ${day.dayNumber} ${new Date(`${day.date}T12:00:00`).toLocaleDateString("en-GB", { month: "long" })}${day.date === getToday() ? ", today" : ""}, ${scheduled.length - doneCount} upcoming, ${doneCount} done`}
             aria-pressed={selectedDate === day.date}
           >
             <span className="day-name">{day.day}</span>
@@ -65,7 +69,7 @@ export function WeekDays({ weekStart, selectedDate, activities, onSelect }) {
               {types.map((type) => (
                 <span
                   key={type}
-                  style={{ background: activityTypes[type]?.color }}
+                  style={{ background: activityTypes[type]?.color ?? "var(--muted)" }}
                 />
               ))}
             </span>
@@ -84,7 +88,11 @@ export function ActivityRow({
   sportPictures,
 }) {
   const { activityTypes } = useSports();
-  const type = activityTypes[activity.type];
+  const type = activityTypes[activity.type] ?? {
+    label: activity.categoryName,
+    icon: "activity",
+    color: "var(--muted)",
+  };
   return (
     <button
       className={`scheduled-activity${activity.logged ? " is-completed" : ""}`}
@@ -112,8 +120,8 @@ export function ActivityRow({
         </span>
         <span className="activity-name">{type.label}</span>
         <span className="activity-meta">
-          {formatTime(activity.time, timeFormat)} · {activity.duration} min ·{" "}
-          {activity.pace}
+          {formatTime(activity.time, timeFormat)} · {activity.duration} min
+          {activity.pace && ` · ${activity.pace}`}
         </span>
       </span>
       <span className={`activity-arrow${activity.logged ? " is-done" : ""}`}>
@@ -189,7 +197,7 @@ export function WeekCard({
     .filter((activity) => activity.date === selectedDate)
     .sort((a, b) => a.time.localeCompare(b.time));
   const dayLabel =
-    selectedDate === DEMO_TODAY
+    selectedDate === getToday()
       ? "Today"
       : new Date(`${selectedDate}T12:00:00`).toLocaleDateString("en-GB", {
           weekday: "long",

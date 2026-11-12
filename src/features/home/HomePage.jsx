@@ -16,10 +16,12 @@ import {
   GoalsDialog,
   ProfileDialog,
 } from './HomeDialogs'
-import { calculateSummary, dateAtOffset, DEMO_TODAY, startOfWeek, weeksBetween } from './homeData'
+import { calculateSummary, dateAtOffset, getToday, startOfWeek, weeksBetween } from './homeData'
 import useHomeData from './useHomeData'
 import useRoute from './useRoute'
 import { createGoalInApi, getGoals, updateGoalInApi } from './goalsApi'
+import { getCalendarWeek } from './calendarApi'
+import { activityNameKey } from '../activities/activityCatalog'
 
 // shortcut: "Repeat every week" adds separate copies for the coming weeks. Store a real
 // weekly rule instead if repeated sessions need to be edited or stopped together.
@@ -48,10 +50,13 @@ export default function HomePage() {
   const previousPage = useRef(page)
   const homeScroll = useRef(0)
   const { timeFormat, weekStart: weekStartsOn } = preferences.settings.units
-  const [selectedDate, setSelectedDate] = useState(DEMO_TODAY)
+  const today = getToday()
+  const [selectedDate, setSelectedDate] = useState(today)
   const [dialog, setDialog] = useState(null)
   const [apiGoals, setApiGoals] = useState(null)
   const [goalsError, setGoalsError] = useState('')
+  const [calendarWeek, setCalendarWeek] = useState(null)
+  const [calendarError, setCalendarError] = useState('')
   useEffect(() => {
     const controller = new AbortController();
 
@@ -69,20 +74,70 @@ export default function HomePage() {
   const [deletedActivity, setDeletedActivity] = useState(null)
   const dialogType = dialog?.type
   const weekStart = startOfWeek(selectedDate, weekStartsOn)
-  const thisWeekStart = startOfWeek(DEMO_TODAY, weekStartsOn)
+  const planActivities =
+    calendarWeek?.start === weekStart
+      ? [
+          ...activities,
+          ...calendarWeek.sessions.map((session) => ({
+            ...session,
+            type: Object.keys(activityTypes).find(
+              (key) =>
+                activityNameKey(activityTypes[key].label) ===
+                activityNameKey(session.categoryName),
+            ),
+          })),
+        ]
+      : activities;
+  useEffect(() => {
+    if (page !== "plan") return;
+
+    const controller = new AbortController();
+
+    setCalendarError('')
+
+    const request =
+      weekStartsOn === "sun"
+        ? Promise.all([
+            getCalendarWeek(weekStart, controller.signal),
+            getCalendarWeek(dateAtOffset(weekStart, 1), controller.signal),
+          ]).then(([previousWeek, nextWeek]) => {
+            const weekEnd = dateAtOffset(weekStart, 7);
+            return [...previousWeek, ...nextWeek].filter(
+              (session) => session.date >= weekStart && session.date < weekEnd,
+            );
+          })
+        : getCalendarWeek(weekStart, controller.signal);
+
+    request
+      .then((sessions) => {
+        if (!controller.signal.aborted) {
+          setCalendarWeek({ start: weekStart, sessions });
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setCalendarError("Could not load your calendar. Please try again.");
+        }
+      });
+
+    return () => controller.abort();
+  }, [page, weekStart, weekStartsOn]);
+  const thisWeekStart = startOfWeek(today, weekStartsOn)
   const weekNavigation = {
     weekOffset: weeksBetween(thisWeekStart, weekStart),
     // Other weeks open on their first day; coming back to this week opens on today.
     onChangeWeek: (delta) => {
       const nextWeek = dateAtOffset(weekStart, delta * 7)
-      setSelectedDate(nextWeek === thisWeekStart ? DEMO_TODAY : nextWeek)
+      setSelectedDate(nextWeek === thisWeekStart ? today : nextWeek)
     },
-    onThisWeek: () => setSelectedDate(DEMO_TODAY),
+    onThisWeek: () => setSelectedDate(today),
   }
   const summary = calculateSummary(activities, weekStart, activityTypes)
-  const detailActivity = ['detail', 'edit-activity'].includes(dialog?.type)
-    ? activities.find((activity) => activity.id === dialog.activity.id)
-    : null
+  const detailActivity = ["detail", "edit-activity"].includes(dialog?.type)
+    ? (page === "plan" ? planActivities : activities).find(
+        (activity) => activity.id === dialog.activity.id,
+      )
+    : null;
 
   const closeDialog = () => setDialog(null)
   const openActivityForm = (date = selectedDate, activityType) => {
@@ -193,8 +248,10 @@ export default function HomePage() {
                 title="Shape a week that fits you."
                 subtitle="Pick a day. Plan the move."
               />
+              {calendarError && <p role="alert">{calendarError}</p>}
               <PlanPage
-                {...{ weekStart, selectedDate, activities, timeFormat }}
+                {...{ weekStart, selectedDate, timeFormat }}
+                activities={planActivities}
                 {...weekNavigation}
                 sportPictures={pictureStorage.pictures}
                 onSelect={setSelectedDate}

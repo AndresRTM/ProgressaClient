@@ -1,6 +1,6 @@
 import Icon from '../../components/Icon'
 import { ActivityRow, WeekDays, WeekHeading } from '../home/HomeCards'
-import { dateAtOffset, dayTitle, DEMO_TODAY } from '../home/homeData'
+import { dateAtOffset, dayTitle, getToday } from '../home/homeData'
 import './plan.css'
 
 function calendarDate(isoDate) {
@@ -62,7 +62,7 @@ export default function PlanPage({
                 activity={activity}
                 onClick={onActivity}
                 dayLabel={
-                  selectedDate === DEMO_TODAY
+                  selectedDate === getToday()
                     ? 'Today'
                     : selected.toLocaleDateString('en-GB', { weekday: 'long' })
                 }
