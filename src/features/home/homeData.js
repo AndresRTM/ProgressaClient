@@ -190,29 +190,44 @@ export function weekDays(start) {
 
 export function calculateSummary(activities, start, activityTypes = ACTIVITY_TYPES) {
   const end = dateAtOffset(start, 7)
-  const weekActivities = activities.filter(
-    (activity) =>
-      activity.date >= start &&
-      activity.date < end &&
-      Object.hasOwn(activityTypes, activity.type) &&
-      Number.isFinite(activity.duration) &&
-      activity.duration > 0,
+  const groups = new Map(
+    Object.entries(activityTypes).map(([type, details]) => [
+      type,
+      { type, ...details, minutes: 0, sessions: 0 },
+    ]),
   )
-  const byType = Object.entries(activityTypes)
-    .map(([type, details]) => {
-      const matching = weekActivities.filter((activity) => activity.type === type)
-      return {
-        type,
-        ...details,
-        minutes: matching.reduce((total, activity) => total + activity.duration, 0),
-        sessions: matching.length,
+
+  for (const activity of activities) {
+    if (activity.date < start || activity.date >= end) continue
+    if (!Number.isFinite(activity.duration) || activity.duration <= 0) continue
+
+    let group = groups.get(activity.type)
+
+    if (!group && activity.categoryName) {
+      const type = `calendar:${activity.categoryName}`
+      if (!groups.has(type)) {
+        groups.set(type, {
+          type,
+          label: activity.categoryName,
+          color: 'var(--muted)',
+          minutes: 0,
+          sessions: 0,
+        })
       }
-    })
-    .filter((activity) => activity.sessions > 0)
+      group = groups.get(type)
+    }
+
+    if (!group) continue
+
+    group.minutes += activity.duration
+    group.sessions += 1
+  }
+
+  const byType = [...groups.values()].filter((group) => group.sessions > 0)
 
   return {
-    totalMinutes: byType.reduce((total, activity) => total + activity.minutes, 0),
-    sessions: weekActivities.length,
+    totalMinutes: byType.reduce((total, group) => total + group.minutes, 0),
+    sessions: byType.reduce((total, group) => total + group.sessions, 0),
     byType,
     uniqueTypes: byType.length,
   }

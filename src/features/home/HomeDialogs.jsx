@@ -16,7 +16,7 @@ import {
 } from "./goalsApi";
 import AddGoalActivityDialog from "./AddGoalActivityDialog";
 
-export function AddGoalDialog({goal, onSave, onClose }) {
+export function AddGoalDialog({ goal, onSave, onClose }) {
   const [metric, setMetric] = useState(String(goal?.metric ?? ""));
   const [activities, setActivities] = useState([]);
   const [activityError, setActivityError] = useState("");
@@ -74,9 +74,7 @@ export function AddGoalDialog({goal, onSave, onClose }) {
       : Number(data.get("target"));
 
     if (endDate < startDate) {
-      setError(
-        "End date must be on or after the start date.",
-      );
+      setError("End date must be on or after the start date.");
       return;
     }
 
@@ -114,7 +112,13 @@ export function AddGoalDialog({goal, onSave, onClose }) {
         <form className="home-form" onSubmit={submit}>
           <label>
             Goal name
-            <input name="title" defaultValue={goal?.title ?? ""} maxLength={60} pattern=".*\S.*" required />
+            <input
+              name="title"
+              defaultValue={goal?.title ?? ""}
+              maxLength={60}
+              pattern=".*\S.*"
+              required
+            />
           </label>
 
           <label>
@@ -176,7 +180,9 @@ export function AddGoalDialog({goal, onSave, onClose }) {
                 Hours
                 <input
                   name="hours"
-                  defaultValue={goal?.metric === 2 ? Math.floor(goal.target / 60) : ""}
+                  defaultValue={
+                    goal?.metric === 2 ? Math.floor(goal.target / 60) : ""
+                  }
                   type="number"
                   min={0}
                   step={1}
@@ -277,6 +283,7 @@ export function ActivityDetailDialog({
   const [feedback, setFeedback] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const cancelDeleteRef = useRef(null);
   const deleteButtonRef = useRef(null);
   const wasConfirmingDelete = useRef(false);
@@ -305,14 +312,24 @@ export function ActivityDetailDialog({
     );
   }
 
-  function deleteActivity() {
-    const deleted = onDelete(activity);
-    if (!deleted)
+  async function deleteActivity() {
+    setDeleteError("");
+    setDeleting(true);
+
+    try {
+      const deleted = await onDelete(activity);
+      if (!deleted) {
+        setDeleteError("Could not delete this activity. Please try again.");
+      }
+    } catch {
       setDeleteError("Could not delete this activity. Please try again.");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
-    <Sheet title={type.label} onClose={onClose}>
+    <Sheet title={type.label} onClose={() => !deleting && onClose()}>
       <div className="activity-detail-icon" style={{ color: type.color }}>
         {sportPictures?.[activity.type] ? (
           <SportPicture
@@ -366,6 +383,7 @@ export function ActivityDetailDialog({
               ref={cancelDeleteRef}
               className="calendar-edit-button"
               type="button"
+              disabled={deleting}
               onClick={() => {
                 setConfirmDelete(false);
                 setDeleteError("");
@@ -376,9 +394,10 @@ export function ActivityDetailDialog({
             <button
               className="calendar-delete-button"
               type="button"
+              disabled={deleting}
               onClick={deleteActivity}
             >
-              Delete activity
+              {deleting ? "Deleting…" : "Delete activity"}
             </button>
           </div>
           <p className="calendar-delete-error" role="alert">
@@ -410,7 +429,7 @@ export function ActivityDetailDialog({
               ref={deleteButtonRef}
               className="calendar-delete-button"
               type="button"
-              disabled={typeof activity.id === "number"}
+              disabled={typeof activity.id === "number" && done}
               onClick={() => {
                 setFeedback("");
                 setConfirmDelete(true);
