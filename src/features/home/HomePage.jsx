@@ -22,6 +22,7 @@ import useRoute from './useRoute'
 import { createGoalInApi, getGoals, updateGoalInApi } from './goalsApi'
 import { getCalendarWeek } from './calendarApi'
 import { activityNameKey } from '../activities/activityCatalog'
+import { deletePlannedSession } from './activitySessionsApi'
 
 // shortcut: "Repeat every week" adds separate copies for the coming weeks. Store a real
 // weekly rule instead if repeated sessions need to be edited or stopped together.
@@ -57,6 +58,7 @@ export default function HomePage() {
   const [goalsError, setGoalsError] = useState('')
   const [calendarWeek, setCalendarWeek] = useState(null)
   const [calendarError, setCalendarError] = useState('')
+  const [deletedCalendarIds, setDeletedCalendarIds] = useState([])
   useEffect(() => {
     const controller = new AbortController();
 
@@ -78,18 +80,20 @@ export default function HomePage() {
     calendarWeek?.start === weekStart
       ? [
           ...activities,
-          ...calendarWeek.sessions.map((session) => ({
-            ...session,
-            type: Object.keys(activityTypes).find(
-              (key) =>
-                activityNameKey(activityTypes[key].label) ===
-                activityNameKey(session.categoryName),
-            ),
-          })),
+          ...calendarWeek.sessions
+            .filter((session) => !deletedCalendarIds.includes(session.id))
+            .map((session) => ({
+              ...session,
+              type: Object.keys(activityTypes).find(
+                (key) =>
+                  activityNameKey(activityTypes[key].label) ===
+                  activityNameKey(session.categoryName),
+              ),
+            })),
         ]
       : activities;
   useEffect(() => {
-    if (page !== "plan") return;
+    if (page !== "plan" && page !== "home") return;
 
     const controller = new AbortController();
 
@@ -132,11 +136,9 @@ export default function HomePage() {
     },
     onThisWeek: () => setSelectedDate(today),
   }
-  const summary = calculateSummary(activities, weekStart, activityTypes)
+  const summary = calculateSummary(planActivities, weekStart, activityTypes)
   const detailActivity = ["detail", "edit-activity"].includes(dialog?.type)
-    ? (page === "plan" ? planActivities : activities).find(
-        (activity) => activity.id === dialog.activity.id,
-      )
+    ? planActivities.find((activity) => activity.id === dialog.activity.id)
     : null;
 
   const closeDialog = () => setDialog(null)
@@ -176,7 +178,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!deletedActivity || dialogType) return
-    const timeout = setTimeout(() => setDeletedActivity(null), 20000)
+    const timeout = setTimeout(() => setDeletedActivity(null), 5000)
     return () => clearTimeout(timeout)
   }, [deletedActivity, dialogType])
 
@@ -197,6 +199,8 @@ export default function HomePage() {
 
   function navigate(tab) {
     closeDialog()
+    if (tab === 'plan' || tab === 'home') setSelectedDate(getToday())
+    if (tab === 'plan') setSelectedDate(getToday())
     if (tab === 'goals' || tab === 'activity') {
       setDialog({ type: tab })
     } else if (tab !== page) {
@@ -266,7 +270,8 @@ export default function HomePage() {
               <HomeHeader profileName={profileName} onProfile={openSettings} />
               <main className="home-content" id="main-content" tabIndex={-1}>
                 <WeekCard
-                  {...{ weekStart, selectedDate, activities, timeFormat }}
+                  {...{ weekStart, selectedDate, timeFormat }}
+                  activities={planActivities}
                   {...weekNavigation}
                   sportPictures={pictureStorage.pictures}
                   onSelect={setSelectedDate}
@@ -421,7 +426,22 @@ export default function HomePage() {
           onEdit={(activity) =>
             setDialog({ ...dialog, type: "edit-activity", activity })
           }
-          onDelete={(activity) => {
+          onDelete={async (activity) => {
+            if (typeof activity.id === "number") {
+              if (activity.logged) return null;
+
+              await deletePlannedSession(activity.id);
+              setDeletedCalendarIds((ids) => [...ids, activity.id]);
+              setDialog((current) =>
+                current?.type === "detail" &&
+                current.activity.id === activity.id
+                  ? null
+                  : current,
+              );
+              setNotice("Activity deleted.");
+              return activity;
+            }
+
             const removed = deleteActivity(activity.id);
             if (!removed) return null;
             setDeletedActivity(removed);
