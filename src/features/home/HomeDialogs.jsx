@@ -280,7 +280,11 @@ export function ActivityDetailDialog({
   const cancelDeleteRef = useRef(null);
   const deleteButtonRef = useRef(null);
   const wasConfirmingDelete = useRef(false);
-  const type = activityTypes[activity.type];
+  const type = activityTypes[activity.type] ?? {
+    label: activity.categoryName,
+    icon: "activity",
+    color: "var(--muted)",
+  };
   const done = activity.logged === true;
 
   useLayoutEffect(() => {
@@ -340,10 +344,12 @@ export function ActivityDetailDialog({
           <dt>Duration</dt>
           <dd>{activity.duration} minutes</dd>
         </div>
-        <div>
-          <dt>Your rhythm</dt>
-          <dd>{activity.pace}</dd>
-        </div>
+        {activity.pace && (
+          <div>
+            <dt>Your rhythm</dt>
+            <dd>{activity.pace}</dd>
+          </div>
+        )}
       </dl>
       {confirmDelete ? (
         <section
@@ -384,6 +390,7 @@ export function ActivityDetailDialog({
           <button
             className={done ? "detail-status-button" : "primary-button"}
             type="button"
+            disabled={typeof activity.id === "number"}
             onClick={changeStatus}
           >
             {done ? "Mark as upcoming" : "Mark as done"}
@@ -393,6 +400,7 @@ export function ActivityDetailDialog({
             <button
               className="calendar-edit-button"
               type="button"
+              disabled={typeof activity.id === "number"}
               onClick={() => onEdit(activity)}
             >
               <Icon name="edit" size={18} />
@@ -402,6 +410,7 @@ export function ActivityDetailDialog({
               ref={deleteButtonRef}
               className="calendar-delete-button"
               type="button"
+              disabled={typeof activity.id === "number"}
               onClick={() => {
                 setFeedback("");
                 setConfirmDelete(true);
