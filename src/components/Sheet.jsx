@@ -1,8 +1,10 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useId, useLayoutEffect, useRef } from 'react'
 import Icon from './Icon'
 
 export default function Sheet({ title, children, onClose, className = '', showHandle = false }) {
   const dialogRef = useRef(null)
+  const titleId = useId()
+  
   useLayoutEffect(() => {
     const dialog = dialogRef.current
     const opener = document.activeElement
@@ -20,7 +22,7 @@ export default function Sheet({ title, children, onClose, className = '', showHa
     <dialog
       className={`sheet ${className}`}
       ref={dialogRef}
-      aria-labelledby="sheet-title"
+      aria-labelledby={titleId}
       onCancel={onClose}
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose()
@@ -29,7 +31,7 @@ export default function Sheet({ title, children, onClose, className = '', showHa
       {showHandle && <div className="log-sheet-grip" aria-hidden="true" />}
       <div className="sheet-panel">
         <div className="sheet-heading">
-          <h2 id="sheet-title">{title}</h2>
+          <h2 id={titleId}>{title}</h2>
           <button className="icon-button sheet-close" onClick={onClose} aria-label="Close dialog">
             <Icon name="close" size={21} />
           </button>

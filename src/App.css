@@ -355,9 +355,6 @@
 .progress-fill--swimming {
   background: var(--swimming);
 }
-.progress-fill--cycling {
-  background: var(--cycling);
-}
 .summary-content {
   display: flex;
   gap: 12px;
@@ -655,13 +652,6 @@
 }
 .sheet-panel > .primary-button {
   margin-top: 24px;
-}
-.sheet .goal-list {
-  margin-top: 20px;
-  gap: 20px;
-}
-.sheet .goal-label {
-  font-size: 13px;
 }
 .activity-detail-icon {
   display: flex;
