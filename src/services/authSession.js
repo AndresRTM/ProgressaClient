@@ -71,6 +71,18 @@ export function clearSession() {
   }
 }
 
+// Tar bort all data appen sparat i webbläsaren (inställningar, aktiviteter, bilder, session).
+export function clearAppStorage() {
+  currentSession = null
+  try {
+    Object.keys(window.localStorage)
+      .filter((key) => key.startsWith('progressa:'))
+      .forEach((key) => window.localStorage.removeItem(key))
+  } catch {
+    // Inget att rensa om lagringen inte går att nå.
+  }
+}
+
 // Läser om sessionen från lagringen, t.ex. när en annan flik loggat in eller ut.
 export function reloadSession() {
   currentSession = readStoredSession()

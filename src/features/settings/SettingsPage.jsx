@@ -1,6 +1,8 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import Icon from '../../components/Icon'
+import { useAuth } from '../auth/useAuth'
 import { profileInitials } from '../home/homeData'
+import DeleteAccountDialog from './DeleteAccountDialog'
 import LoggingSettings from './LoggingSettings'
 import NotificationsSettings from './NotificationsSettings'
 import SportSettings from './SportSettings'
@@ -15,9 +17,9 @@ const pageHeadings = {
   'settings/units': ['Units', 'Used everywhere: logging, goals and Activity.'],
 }
 
-function MenuRow({ icon, title, description, onClick }) {
+function MenuRow({ icon, title, description, onClick, danger = false }) {
   return (
-    <button className="settings-menu-row" onClick={onClick}>
+    <button className={`settings-menu-row${danger ? ' is-danger' : ''}`} onClick={onClick}>
       <span className="settings-menu-icon">
         <Icon name={icon} size={22} />
       </span>
@@ -48,6 +50,8 @@ export default function SettingsPage({
     updateTarget,
     setFavoriteSports,
   } = preferences
+  const { user } = useAuth()
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const headingRef = useRef(null)
   const [title, subtitle] = pageHeadings[page] || pageHeadings.settings
   const metric =
@@ -137,8 +141,25 @@ export default function SettingsPage({
                 onClick={() => navigate('settings/units')}
               />
             </section>
+            <section className="settings-card settings-menu" aria-labelledby="your-account">
+              <h2 className="settings-section-label" id="your-account">
+                Account
+              </h2>
+              <p className="settings-account-email">
+                <small>Signed in as</small>
+                {user?.email}
+              </p>
+              <MenuRow
+                icon="trash"
+                title="Delete account"
+                description="Permanently remove your account and data"
+                onClick={() => setConfirmDelete(true)}
+                danger
+              />
+            </section>
           </div>
         )}
+        {confirmDelete && <DeleteAccountDialog onClose={() => setConfirmDelete(false)} />}
         {page === 'settings/logging' && (
           <LoggingSettings
             value={settings.logging}

@@ -52,6 +52,11 @@ export default function LoginPage() {
             Your session has ended. Sign in again to continue.
           </p>
         )}
+        {signedOutReason === 'deleted' && !error && (
+          <p className="login-notice" role="status">
+            Your account and all its data have been deleted.
+          </p>
+        )}
 
         <form className="home-form login-card" onSubmit={handleSubmit}>
           <label>

@@ -172,6 +172,7 @@ const icons = {
       <path d="m5 16 5-8 4 8H5m5-8h6l3 8M8 8h4m4-4h2l1 4" />
     </>
   ),
+  trash: <path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v6m4-6v6" />,
 }
 
 export default function Icon({ name, size = 24, className = '', ...props }) {
