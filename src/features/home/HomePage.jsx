@@ -12,12 +12,14 @@ import {
   ActivityDetailDialog,
   ActivityDialog,
   AddGoalDialog,
+  EditGoalDialog,
   GoalsDialog,
   ProfileDialog,
 } from './HomeDialogs'
 import { calculateSummary, dateAtOffset, DEMO_TODAY, startOfWeek, weeksBetween } from './homeData'
 import useHomeData from './useHomeData'
 import useRoute from './useRoute'
+import { createGoalInApi, getGoals, updateGoalInApi } from './goalsApi'
 
 // shortcut: "Repeat every week" adds separate copies for the coming weeks. Store a real
 // weekly rule instead if repeated sessions need to be edited or stopped together.
@@ -26,7 +28,6 @@ const REPEAT_WEEKS = 12
 export default function HomePage() {
   const {
     activities,
-    goals,
     profileName,
     dailyLogs,
     dataError,
@@ -37,7 +38,6 @@ export default function HomePage() {
     deleteActivity,
     restoreActivity,
     saveDailyLog,
-    addGoal,
     updateProfile,
   } = useHomeData()
   const { activityTypes } = useSports()
@@ -50,6 +50,21 @@ export default function HomePage() {
   const { timeFormat, weekStart: weekStartsOn } = preferences.settings.units
   const [selectedDate, setSelectedDate] = useState(DEMO_TODAY)
   const [dialog, setDialog] = useState(null)
+  const [apiGoals, setApiGoals] = useState(null)
+  const [goalsError, setGoalsError] = useState('')
+  useEffect(() => {
+    const controller = new AbortController();
+
+    getGoals(controller.signal)
+      .then(setApiGoals)
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setGoalsError("Could not load your goals.");
+        }
+      });
+
+    return () => controller.abort();
+  }, []);
   const [notice, setNotice] = useState('')
   const [deletedActivity, setDeletedActivity] = useState(null)
   const dialogType = dialog?.type
@@ -142,15 +157,17 @@ export default function HomePage() {
   }
 
   return (
-    <div className={`app-shell${isSettings ? ' app-shell--settings' : ''}`}>
+    <div className={`app-shell${isSettings ? " app-shell--settings" : ""}`}>
       <a
         className="skip-link"
-        href={isSettings ? '#settings-content' : '#main-content'}
+        href={isSettings ? "#settings-content" : "#main-content"}
         onClick={(event) => {
-          event.preventDefault()
-          const content = document.getElementById(isSettings ? 'settings-content' : 'main-content')
-          content?.focus()
-          content?.scrollIntoView()
+          event.preventDefault();
+          const content = document.getElementById(
+            isSettings ? "settings-content" : "main-content",
+          );
+          content?.focus();
+          content?.scrollIntoView();
         }}
       >
         Skip to content
@@ -163,12 +180,12 @@ export default function HomePage() {
           profileName={profileName}
           preferences={preferences}
           pictureStorage={pictureStorage}
-          onProfile={() => setDialog({ type: 'profile' })}
-          onGoals={() => setDialog({ type: 'goals' })}
+          onProfile={() => setDialog({ type: "profile" })}
+          onGoals={() => setDialog({ type: "goals" })}
         />
       ) : (
         <>
-          {page === 'plan' ? (
+          {page === "plan" ? (
             <>
               <HomeHeader
                 profileName={profileName}
@@ -181,7 +198,9 @@ export default function HomePage() {
                 {...weekNavigation}
                 sportPictures={pictureStorage.pictures}
                 onSelect={setSelectedDate}
-                onActivity={(activity) => setDialog({ type: 'detail', activity })}
+                onActivity={(activity) =>
+                  setDialog({ type: "detail", activity })
+                }
                 onAdd={openActivityForm}
               />
             </>
@@ -194,36 +213,54 @@ export default function HomePage() {
                   {...weekNavigation}
                   sportPictures={pictureStorage.pictures}
                   onSelect={setSelectedDate}
-                  onActivity={(activity) => setDialog({ type: 'detail', activity })}
+                  onActivity={(activity) =>
+                    setDialog({ type: "detail", activity })
+                  }
                   onAdd={() => openActivityForm()}
                 />
-                <GoalsCard {...{ goals, summary }} onAdd={() => setDialog({ type: 'add-goal' })} />
-                <DailyLogSummary log={dailyLogs[selectedDate]} units={preferences.settings.units} />
+                <GoalsCard
+                  goals={apiGoals}
+                  goalsError={goalsError}
+                  onAdd={() => setDialog({ type: "add-goal" })}
+                />
+                <DailyLogSummary
+                  log={dailyLogs[selectedDate]}
+                  units={preferences.settings.units}
+                />
                 <ActivitySummary summary={summary} />
               </main>
             </>
           )}
           <BottomNav
-            activeTab={['goals', 'activity'].includes(dialog?.type) ? dialog.type : page}
+            activeTab={
+              ["goals", "activity"].includes(dialog?.type) ? dialog.type : page
+            }
             onNavigate={navigate}
-            onAdd={() => setDialog({ type: 'log-today', date: selectedDate })}
+            onAdd={() => setDialog({ type: "log-today", date: selectedDate })}
           />
         </>
       )}
-      <div className={`notice${notice || showUndo ? ' is-visible' : ''}${showUndo ? ' notice-with-action' : ''}`} role="status">
+      <div
+        className={`notice${notice || showUndo ? " is-visible" : ""}${showUndo ? " notice-with-action" : ""}`}
+        role="status"
+      >
         {showUndo ? (
           <>
             <span>Activity deleted.</span>
-            <button type="button" onClick={undoDelete}>Undo</button>
+            <button type="button" onClick={undoDelete}>
+              Undo
+            </button>
           </>
-        ) : notice}
+        ) : (
+          notice
+        )}
       </div>
       {dataError && (
         <p className="home-storage-error" role="alert">
           {dataError}
         </p>
       )}
-      {dialog?.type === 'log-today' && !isSettings && (
+      {dialog?.type === "log-today" && !isSettings && (
         <LogTodayDialog
           date={dialog.date}
           initialValues={dialog.initialValues}
@@ -233,22 +270,26 @@ export default function HomePage() {
           dailyLog={dailyLogs[dialog.date]}
           dataError={dataError}
           onFavoriteChange={preferences.setFavoriteSports}
-          onEditFavorites={(draft) => openLogPreferences('settings/sports', draft)}
-          onLoggingSettings={(draft) => openLogPreferences('settings/logging', draft)}
+          onEditFavorites={(draft) =>
+            openLogPreferences("settings/sports", draft)
+          }
+          onLoggingSettings={(draft) =>
+            openLogPreferences("settings/logging", draft)
+          }
           onLogWorkout={(activity, plannedId) => {
-            const logged = logWorkout(activity, plannedId)
-            if (logged) setNotice('Workout logged. Your week is updated.')
-            return logged
+            const logged = logWorkout(activity, plannedId);
+            if (logged) setNotice("Workout logged. Your week is updated.");
+            return logged;
           }}
           onSaveDailyLog={(date, patch) => {
-            const saved = saveDailyLog(date, patch)
-            if (saved) setNotice('Your daily log is saved.')
-            return saved
+            const saved = saveDailyLog(date, patch);
+            if (saved) setNotice("Your daily log is saved.");
+            return saved;
           }}
           onClose={closeDialog}
         />
       )}
-      {dialog?.type === 'add-activity' && (
+      {dialog?.type === "add-activity" && (
         <AddActivityDialog
           key="add-activity"
           selectedDate={dialog.date}
@@ -259,35 +300,42 @@ export default function HomePage() {
           onFavoriteChange={preferences.setFavoriteSports}
           onClose={closeDialog}
           onSave={(activity, repeatWeekly) => {
-            const added = addActivity(activity)
-            if (!added) return null
+            const added = addActivity(activity);
+            if (!added) return null;
             if (repeatWeekly) {
               for (let week = 1; week < REPEAT_WEEKS; week += 1) {
-                addActivity({ ...activity, date: dateAtOffset(activity.date, week * 7) })
+                addActivity({
+                  ...activity,
+                  date: dateAtOffset(activity.date, week * 7),
+                });
               }
             }
-            const weekday = new Date(`${added.date}T12:00:00`).toLocaleDateString('en-GB', {
-              weekday: 'long',
-            })
-            setSelectedDate(added.date)
-            closeDialog()
-            setNotice(`${activityTypes[added.type].label} added to ${weekday}.`)
-            return added
+            const weekday = new Date(
+              `${added.date}T12:00:00`,
+            ).toLocaleDateString("en-GB", {
+              weekday: "long",
+            });
+            setSelectedDate(added.date);
+            closeDialog();
+            setNotice(
+              `${activityTypes[added.type].label} added to ${weekday}.`,
+            );
+            return added;
           }}
         />
       )}
-      {dialog?.type === 'add-goal' && (
+      {dialog?.type === "add-goal" && (
         <AddGoalDialog
           key="add-goal"
           onClose={closeDialog}
-          onSave={(goal) => {
-            addGoal(goal)
-            closeDialog()
-            setNotice('Your new goal is ready.')
+          onSave={async (goal) => {
+            const created = await createGoalInApi(goal);
+            setApiGoals((current) => [...(current ?? []), created]);
+            setDialog({ type: "goals" });
           }}
         />
       )}
-      {dialog?.type === 'edit-activity' && detailActivity && (
+      {dialog?.type === "edit-activity" && detailActivity && (
         <AddActivityDialog
           key={`edit-${detailActivity.id}`}
           activity={detailActivity}
@@ -296,49 +344,89 @@ export default function HomePage() {
           favoriteSports={preferences.settings.favoriteSports}
           sportPictures={pictureStorage.pictures}
           onFavoriteChange={preferences.setFavoriteSports}
-          onClose={() => setDialog({ ...dialog, type: 'detail' })}
+          onClose={() => setDialog({ ...dialog, type: "detail" })}
           onSave={(values) => {
-            const updated = updateActivity(detailActivity.id, values)
-            if (!updated) return null
-            setSelectedDate(updated.date)
-            setDialog({ ...dialog, type: 'detail', activity: updated })
-            setNotice('Activity updated.')
-            return updated
+            const updated = updateActivity(detailActivity.id, values);
+            if (!updated) return null;
+            setSelectedDate(updated.date);
+            setDialog({ ...dialog, type: "detail", activity: updated });
+            setNotice("Activity updated.");
+            return updated;
           }}
         />
       )}
-      {dialog?.type === 'detail' && detailActivity && (
+      {dialog?.type === "detail" && detailActivity && (
         <ActivityDetailDialog
           key="detail"
           activity={detailActivity}
           timeFormat={timeFormat}
           sportPictures={pictureStorage.pictures}
-          onEdit={(activity) => setDialog({ ...dialog, type: 'edit-activity', activity })}
+          onEdit={(activity) =>
+            setDialog({ ...dialog, type: "edit-activity", activity })
+          }
           onDelete={(activity) => {
-            const removed = deleteActivity(activity.id)
-            if (!removed) return null
-            setDeletedActivity(removed)
-            setNotice('')
-            closeDialog()
-            return removed
+            const removed = deleteActivity(activity.id);
+            if (!removed) return null;
+            setDeletedActivity(removed);
+            setNotice("");
+            closeDialog();
+            return removed;
           }}
           onSetDone={(activity, done) => {
-            const updated = setActivityDone(activity.id, done)
-            if (updated) setNotice(done ? 'Activity marked as done.' : 'Activity marked as upcoming.')
-            return updated
+            const updated = setActivityDone(activity.id, done);
+            if (updated)
+              setNotice(
+                done
+                  ? "Activity marked as done."
+                  : "Activity marked as upcoming.",
+              );
+            return updated;
           }}
           onClose={closeDialog}
         />
       )}
-      {dialog?.type === 'goals' && (
+      {dialog?.type === "goals" && (
         <GoalsDialog
           key="goals"
-          {...{ goals, summary }}
-          onAdd={() => setDialog({ type: 'add-goal' })}
+          goals={apiGoals}
+          goalsError={goalsError}
+          onRemoved={(id) => {
+            setApiGoals((current) => current.filter((goal) => goal.id !== id));
+          }}
+          onAdd={() => setDialog({ type: "add-goal" })}
+          onEdit={(goal) => setDialog({ type: "edit-goal", goal })}
           onClose={closeDialog}
         />
       )}
-      {dialog?.type === 'activity' && (
+
+      {dialog?.type === "edit-goal" && (
+        <EditGoalDialog
+          goal={dialog.goal}
+          onClose={() => setDialog({ type: "goals" })}
+          onSave={async (id, changes) => {
+            const { startDate, endDate, isCompleted, calendarId } = dialog.goal;
+
+            try {
+              const updated = await updateGoalInApi(id, {
+                startDate,
+                endDate,
+                isCompleted,
+                calendarId,
+                ...changes,
+              });
+
+              setApiGoals((current) =>
+                current.map((goal) => (goal.id === id ? updated : goal)),
+              );
+              setDialog({ type: "goals" });
+            } catch {
+              window.alert("Det gick inte att spara ändringarna. Försök igen.");
+            }
+          }}
+        />
+      )}
+
+      {dialog?.type === "activity" && (
         <ActivityDialog
           key="activity"
           summary={summary}
@@ -347,18 +435,18 @@ export default function HomePage() {
           onClose={closeDialog}
         />
       )}
-      {dialog?.type === 'profile' && (
+      {dialog?.type === "profile" && (
         <ProfileDialog
           key="profile"
           profileName={profileName}
           onClose={closeDialog}
           onSave={(name) => {
-            updateProfile(name)
-            closeDialog()
-            setNotice('Profile updated.')
+            updateProfile(name);
+            closeDialog();
+            setNotice("Profile updated.");
           }}
         />
       )}
     </div>
-  )
+  );
 }
