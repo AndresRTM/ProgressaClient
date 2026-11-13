@@ -36,3 +36,9 @@ export async function buildPlannedSession(activity, sportName) {
     plannedDurationInMinutes: activity.duration,
   }
 }
+
+export async function completePlannedSession(id, actualDurationInMinutes) {
+  await api.patch(`activity-sessions/${id}/complete`, {
+    actualDurationInMinutes,
+  })
+}

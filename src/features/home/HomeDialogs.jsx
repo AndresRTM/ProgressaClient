@@ -293,6 +293,9 @@ export function ActivityDetailDialog({
     color: "var(--muted)",
   };
   const done = activity.logged === true;
+  const isBackendActivity = typeof activity.id === "number";
+  const [actualDuration, setActualDuration] = useState(activity.duration);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   useLayoutEffect(() => {
     if (confirmDelete) cancelDeleteRef.current?.focus();
@@ -301,15 +304,39 @@ export function ActivityDetailDialog({
     wasConfirmingDelete.current = confirmDelete;
   }, [confirmDelete]);
 
-  function changeStatus() {
-    const updated = onSetDone(activity, !done);
-    setFeedback(
-      updated
-        ? done
-          ? "Marked as upcoming. You can mark it done when you finish."
-          : "Activity marked as done. Nice work!"
-        : "Could not update this activity. Please try again.",
-    );
+  async function changeStatus() {
+    if (updatingStatus) return;
+
+    const minutes = Number(actualDuration);
+
+    if (isBackendActivity) {
+      if (Date.now() < activity.scheduledAtMs) {
+        setFeedback("You can mark this activity as done once it starts.");
+        return;
+      }
+
+      if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440) {
+        setFeedback("Enter a whole number between 1 and 1440 minutes.");
+        return;
+      }
+    }
+
+    setFeedback("");
+    setUpdatingStatus(true);
+
+    try {
+      const updated = await onSetDone(activity, !done, minutes);
+
+      if (!updated) {
+        setFeedback("Could not update this activity. Please try again.");
+      } else {
+        setFeedback(done ? "Marked as upcoming." : "Activity marked as done.");
+      }
+    } catch {
+      setFeedback("Could not update this activity. Please try again.");
+    } finally {
+      setUpdatingStatus(false);
+    }
   }
 
   async function deleteActivity() {
@@ -329,7 +356,10 @@ export function ActivityDetailDialog({
   }
 
   return (
-    <Sheet title={type.label} onClose={() => !deleting && onClose()}>
+    <Sheet
+      title={type.label}
+      onClose={() => !deleting && !updatingStatus && onClose()}
+    >
       <div className="activity-detail-icon" style={{ color: type.color }}>
         {sportPictures?.[activity.type] ? (
           <SportPicture
@@ -359,7 +389,7 @@ export function ActivityDetailDialog({
         </div>
         <div>
           <dt>Duration</dt>
-          <dd>{activity.duration} minutes</dd>
+          <dd>{formatDuration(activity.duration).replace(/h(?=\d)/, "h ")}</dd>
         </div>
         {activity.pace && (
           <div>
@@ -406,20 +436,45 @@ export function ActivityDetailDialog({
         </section>
       ) : (
         <div className="calendar-detail-actions">
-          <button
-            className={done ? "detail-status-button" : "primary-button"}
-            type="button"
-            disabled={typeof activity.id === "number"}
-            onClick={changeStatus}
-          >
-            {done ? "Mark as upcoming" : "Mark as done"}
-            <Icon name={done ? "rotate-ccw" : "check"} size={19} />
-          </button>
+          {isBackendActivity && !done && (
+            <label className="actual-duration-row">
+              <span>Actual duration</span>
+              <span className="actual-duration-field">
+                <input
+                  type="number"
+                  min={1}
+                  max={1440}
+                  step={1}
+                  value={actualDuration}
+                  onChange={(event) => setActualDuration(event.target.value)}
+                  disabled={updatingStatus}
+                />
+                <span>min</span>
+              </span>
+            </label>
+          )}
+
+          {(!isBackendActivity || !done) && (
+            <button
+              className={done ? "detail-status-button" : "primary-button"}
+              type="button"
+              disabled={updatingStatus}
+              onClick={changeStatus}
+            >
+              {updatingStatus
+                ? "Saving…"
+                : done
+                  ? "Mark as upcoming"
+                  : "Mark as done"}
+              <Icon name={done ? "rotate-ccw" : "check"} size={19} />
+            </button>
+          )}
+          {!(isBackendActivity && done) && (
           <div className="calendar-edit-actions">
             <button
               className="calendar-edit-button"
               type="button"
-              disabled={typeof activity.id === "number"}
+              disabled={updatingStatus || isBackendActivity}
               onClick={() => onEdit(activity)}
             >
               <Icon name="edit" size={18} />
@@ -429,7 +484,7 @@ export function ActivityDetailDialog({
               ref={deleteButtonRef}
               className="calendar-delete-button"
               type="button"
-              disabled={typeof activity.id === "number" && done}
+              disabled={updatingStatus || (isBackendActivity && done)}
               onClick={() => {
                 setFeedback("");
                 setConfirmDelete(true);
@@ -439,6 +494,7 @@ export function ActivityDetailDialog({
               Delete activity
             </button>
           </div>
+          )}
         </div>
       )}
       <p className="detail-status-feedback" role="status">
