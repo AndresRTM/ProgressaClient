@@ -22,3 +22,8 @@ export async function getCalendarWeek(date, signal) {
     }
   })
 }
+
+export async function getDefaultCalendarId() {
+  const { data } = await api.get('calendar/default')
+  return data.calendarId;
+}

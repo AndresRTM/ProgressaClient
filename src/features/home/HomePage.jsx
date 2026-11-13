@@ -22,7 +22,11 @@ import useRoute from './useRoute'
 import { createGoalInApi, getGoals, updateGoalInApi } from './goalsApi'
 import { getCalendarWeek } from './calendarApi'
 import { activityNameKey } from '../activities/activityCatalog'
-import { deletePlannedSession } from './activitySessionsApi'
+import {
+  buildPlannedSession,
+  createPlannedSession,
+  deletePlannedSession,
+} from "./activitySessionsApi";
 
 // shortcut: "Repeat every week" adds separate copies for the coming weeks. Store a real
 // weekly rule instead if repeated sessions need to be edited or stopped together.
@@ -34,7 +38,6 @@ export default function HomePage() {
     profileName,
     dailyLogs,
     dataError,
-    addActivity,
     logWorkout,
     setActivityDone,
     updateActivity,
@@ -57,6 +60,7 @@ export default function HomePage() {
   const [apiGoals, setApiGoals] = useState(null)
   const [goalsError, setGoalsError] = useState('')
   const [calendarWeek, setCalendarWeek] = useState(null)
+  const [calendarRefresh, setCalendarRefresh] = useState(0)
   const [calendarError, setCalendarError] = useState('')
   const [deletedCalendarIds, setDeletedCalendarIds] = useState([])
   useEffect(() => {
@@ -125,7 +129,7 @@ export default function HomePage() {
       });
 
     return () => controller.abort();
-  }, [page, weekStart, weekStartsOn]);
+  }, [page, weekStart, weekStartsOn, calendarRefresh]);
   const thisWeekStart = startOfWeek(today, weekStartsOn)
   const weekNavigation = {
     weekOffset: weeksBetween(thisWeekStart, weekStart),
@@ -361,28 +365,36 @@ export default function HomePage() {
           sportPictures={pictureStorage.pictures}
           onFavoriteChange={preferences.setFavoriteSports}
           onClose={closeDialog}
-          onSave={(activity, repeatWeekly) => {
-            const added = addActivity(activity);
-            if (!added) return null;
-            if (repeatWeekly) {
-              for (let week = 1; week < REPEAT_WEEKS; week += 1) {
-                addActivity({
-                  ...activity,
-                  date: dateAtOffset(activity.date, week * 7),
-                });
+          onSave={async (activity, repeatWeekly) => {
+            const sportName = activityTypes[activity.type].label;
+            const session = await buildPlannedSession(activity, sportName);
+            const total = repeatWeekly ? REPEAT_WEEKS : 1;
+            let savedCount = 0;
+
+            for (let week = 0; week < total; week += 1) {
+              const date = dateAtOffset(activity.date, week * 7);
+              const scheduledAt = new Date(
+                `${date}T${activity.time}`,
+              ).toISOString();
+
+              try {
+                await createPlannedSession({ ...session, scheduledAt });
+                savedCount += 1;
+              } catch (error) {
+                if (savedCount === 0) throw error;
+                break;
               }
             }
-            const weekday = new Date(
-              `${added.date}T12:00:00`,
-            ).toLocaleDateString("en-GB", {
-              weekday: "long",
-            });
-            setSelectedDate(added.date);
+
+            setSelectedDate(activity.date);
+            setCalendarRefresh((current) => current + 1);
             closeDialog();
             setNotice(
-              `${activityTypes[added.type].label} added to ${weekday}.`,
+              savedCount === total
+                ? `${sportName} added to your plan.`
+                : `Saved ${savedCount} of ${total} sessions. Check your calendar before adding the rest.`,
             );
-            return added;
+            return true;
           }}
         />
       )}
