@@ -8,6 +8,7 @@ import {
   dayTitle,
   DEMO_TODAY,
   formatWeekRange,
+  getToday,
   INTENSITY_OPTIONS,
   INTENSITY_PACES,
   intensityOf,
@@ -45,6 +46,7 @@ export default function AddActivityDialog({
   const [repeat, setRepeat] = useState(false)
   const [choosingSport, setChoosingSport] = useState(false)
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   const sport = sports.find((item) => item.id === type)
   const sportTiles = favorites.slice(0, 4)
@@ -53,33 +55,55 @@ export default function AddActivityDialog({
     ? DURATIONS
     : [...DURATIONS, duration].sort((a, b) => a - b)
   const weekStart = startOfWeek(date, weekStartsOn)
-  const canGoBack = weekStart > startOfWeek(DEMO_TODAY, weekStartsOn)
+  const earliestDate = editing ? DEMO_TODAY : getToday()
+  const canGoBack = weekStart > startOfWeek(earliestDate, weekStartsOn)
 
   // Keep the same weekday in the new week, but never land on a day that has passed.
   function changeWeek(delta) {
     const nextDate = dateAtOffset(date, delta * 7)
-    setDate(nextDate < DEMO_TODAY ? DEMO_TODAY : nextDate)
+    setDate(nextDate < earliestDate  ? earliestDate  : nextDate)
   }
 
-  function submit(event) {
-    event.preventDefault()
+  async function submit(event) {
+    event.preventDefault();
+    if (saving) return;
+
     if (!sport) {
-      setError('Choose a sport first.')
-      return
+      setError("Choose a sport first.");
+      return;
     }
-    const keepPace = editing && intensity === intensityOf(activity)
-    const saved = onSave(
-      {
-        type,
-        date,
-        time,
-        duration,
-        intensity,
-        pace: keepPace ? activity.pace : (INTENSITY_PACES[intensity] ?? NO_PACE),
-      },
-      repeat,
-    )
-    if (!saved) setError('This session could not be saved. Check its details and try again.')
+
+    setError("");
+    setSaving(true);
+
+    try {
+      const keepPace = editing && intensity === intensityOf(activity);
+      const saved = await onSave(
+        {
+          type,
+          date,
+          time,
+          duration,
+          intensity,
+          pace: keepPace
+            ? activity.pace
+            : (INTENSITY_PACES[intensity] ?? NO_PACE),
+        },
+        repeat,
+      );
+
+      if (!saved) {
+        setError("This session could not be saved. Please try again.");
+      }
+    } catch (error) {
+      setError(
+        error?.message === "Choose a date and time in the future."
+          ? error.message
+          : "This session could not be saved. Please try again.",
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (choosingSport) {
@@ -105,7 +129,7 @@ export default function AddActivityDialog({
 
   return (
     <Sheet
-      title={editing ? 'Edit session' : 'Add session'}
+      title={editing ? "Edit session" : "Add session"}
       onClose={onClose}
       className="log-sheet"
       showHandle
@@ -133,18 +157,22 @@ export default function AddActivityDialog({
                 className="add-session-tile"
                 aria-pressed={item.id === type}
                 onClick={() => {
-                  setType(item.id)
-                  setError('')
+                  setType(item.id);
+                  setError("");
                 }}
               >
                 {sportPictures?.[item.id] ? (
-                  <SportPicture sport={item} picture={sportPictures[item.id]} size={28} />
+                  <SportPicture
+                    sport={item}
+                    picture={sportPictures[item.id]}
+                    size={28}
+                  />
                 ) : (
                   <Icon
                     name={item.icon}
                     size={24}
                     className={`activity-icon activity-icon--${item.id}`}
-                    style={{ '--sport-color': item.color }}
+                    style={{ "--sport-color": item.color }}
                   />
                 )}
                 <span>{item.label}</span>
@@ -169,7 +197,11 @@ export default function AddActivityDialog({
                 <Icon name="chevron-right" size={14} />
               </button>
               <span>{formatWeekRange(weekStart)}</span>
-              <button type="button" onClick={() => changeWeek(1)} aria-label="Next week">
+              <button
+                type="button"
+                onClick={() => changeWeek(1)}
+                aria-label="Next week"
+              >
                 <Icon name="chevron-right" size={14} />
               </button>
             </div>
@@ -182,7 +214,7 @@ export default function AddActivityDialog({
                 className="add-session-tile"
                 aria-pressed={day.date === date}
                 aria-label={dayTitle(day.date)}
-                disabled={day.date < DEMO_TODAY && day.date !== date}
+                disabled={day.date < earliestDate && day.date !== date}
                 onClick={() => setDate(day.date)}
               >
                 <small>{day.day}</small>
@@ -204,7 +236,10 @@ export default function AddActivityDialog({
           </label>
           <label>
             <span className="add-session-label">Duration</span>
-            <select value={duration} onChange={(event) => setDuration(Number(event.target.value))}>
+            <select
+              value={duration}
+              onChange={(event) => setDuration(Number(event.target.value))}
+            >
               {durations.map((minutes) => (
                 <option key={minutes} value={minutes}>
                   {minutes} min
@@ -214,21 +249,23 @@ export default function AddActivityDialog({
           </label>
         </div>
 
-        <fieldset>
-          <legend className="add-session-label">Intensity</legend>
-          <div className="add-session-intensity">
-            {INTENSITY_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                aria-pressed={intensity === option.value}
-                onClick={() => setIntensity(option.value)}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+        {editing && (
+          <fieldset>
+            <legend className="add-session-label">Intensity</legend>
+            <div className="add-session-intensity">
+              {INTENSITY_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={intensity === option.value}
+                  onClick={() => setIntensity(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        )}
 
         {!editing && (
           <div className="add-session-repeat">
@@ -249,8 +286,12 @@ export default function AddActivityDialog({
           </div>
         )}
 
-        <button className="primary-button log-save" type="submit">
-          {editing ? 'Save changes' : 'Add to plan'}
+        <button
+          className="primary-button log-save"
+          type="submit"
+          disabled={saving}
+        >
+          {editing ? "Save changes" : "Add to plan"}
         </button>
         {error && (
           <p className="log-error" role="alert">
@@ -259,5 +300,5 @@ export default function AddActivityDialog({
         )}
       </form>
     </Sheet>
-  )
+  );
 }
