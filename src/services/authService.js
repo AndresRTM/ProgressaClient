@@ -44,3 +44,44 @@ export function deleteAccountErrorMessage(error) {
 
   return 'Your account couldn’t be deleted right now. Try again in a moment.'
 }
+
+export async function register({
+  firstName,
+  lastName,
+  email,
+  age,
+  password,
+  confirmPassword,
+}) {
+  const { data } = await api.post('auth/register', {
+    firstName: firstName.trim(),
+    lastName: lastName.trim(),
+    email: email.trim(),
+    age: Number(age),
+    password,
+    confirmPassword,
+  })
+
+  return data
+}
+
+export function registerErrorMessage(error) {
+  if (isNetworkError(error)) {
+    return "We can't reach Progressa right now. Try again."
+  }
+
+  switch (error?.response?.status) {
+    case 400:
+      return (
+        firstValidationError(error) ??
+        'Please check your information and try again.'
+      )
+    case 409:
+      return 'An account with this email already exists.'
+    case 429:
+      return 'Too many attempts. Please try again later.'
+    default:
+      return 'Something went wrong. Please try again.'
+  }
+}
+

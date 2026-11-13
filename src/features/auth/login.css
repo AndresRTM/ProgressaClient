@@ -84,3 +84,35 @@
   background: var(--green-light);
   color: var(--ink);
 }
+
+
+
+.login-register {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.login-register p {
+  margin: 0 0 8px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.login-register-button {
+  background: transparent;
+  border: none;
+  color: #1f2d29;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-register-button:hover {
+  text-decoration: underline;
+}
+
+.login-register-button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
