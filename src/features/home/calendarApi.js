@@ -11,13 +11,16 @@ export async function getCalendarWeek(date, signal) {
 
     return {
       id: session.id,
+      scheduledAtMs: scheduledAt.getTime(),
       categoryName: session.categoryName,
       date: scheduledAt.toLocaleDateString('sv-SE'),
       time: scheduledAt.toLocaleTimeString('sv-SE', {
         hour: '2-digit',
         minute: '2-digit',
       }),
-      duration: session.plannedDurationInMinutes,
+      duration: session.status === 'Completed'
+        ? session.actualDurationInMinutes ?? session.PlannedDurationInMinutes
+        : session.plannedDurationInMinutes,
       logged: session.status === 'Completed',
     }
   })

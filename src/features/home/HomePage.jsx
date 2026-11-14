@@ -24,6 +24,7 @@ import { getCalendarWeek } from './calendarApi'
 import { activityNameKey } from '../activities/activityCatalog'
 import {
   buildPlannedSession,
+  completePlannedSession,
   createPlannedSession,
   deletePlannedSession,
 } from "./activitySessionsApi";
@@ -461,14 +462,26 @@ export default function HomePage() {
             closeDialog();
             return removed;
           }}
-          onSetDone={(activity, done) => {
+          onSetDone={async (activity, done, actualDurationInMinutes) => {
+            if (typeof activity.id === "number") {
+              if (!done) return null;
+
+              await completePlannedSession(
+                activity.id,
+                actualDurationInMinutes,
+              );
+              setCalendarRefresh((current) => current + 1);
+              return true;
+            }
+
             const updated = setActivityDone(activity.id, done);
-            if (updated)
+            if (updated) {
               setNotice(
                 done
                   ? "Activity marked as done."
                   : "Activity marked as upcoming.",
               );
+            }
             return updated;
           }}
           onClose={closeDialog}

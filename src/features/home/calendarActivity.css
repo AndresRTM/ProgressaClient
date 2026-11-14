@@ -98,6 +98,54 @@
   display: none;
 }
 
+.actual-duration-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.actual-duration-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #eef1ea;
+}
+
+.actual-duration-field:focus-within {
+  outline: 2px solid #71895a;
+  outline-offset: 2px;
+}
+
+.actual-duration-field input {
+  width: 4.5ch;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #202c27;
+  font: inherit;
+  font-size: 16px;
+  text-align: right;
+  appearance: textfield;
+}
+
+.actual-duration-field input::-webkit-inner-spin-button,
+.actual-duration-field input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.calendar-edit-button:disabled,
+.calendar-delete-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 @media (max-width: 360px) {
   .calendar-edit-actions,
   .calendar-delete-actions {

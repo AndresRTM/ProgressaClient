@@ -120,7 +120,7 @@ export function ActivityRow({
         </span>
         <span className="activity-name">{type.label}</span>
         <span className="activity-meta">
-          {formatTime(activity.time, timeFormat)} · {activity.duration} min
+          {formatTime(activity.time, timeFormat)} · {formatDuration(activity.duration).replace(/h(?=\d)/, "h ")}
           {activity.pace && ` · ${activity.pace}`}
         </span>
       </span>
