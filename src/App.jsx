@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react'
 
 import HomePage from './features/home/HomePage'
-
 import { SportsProvider } from './features/activities/SportsProvider'
 import { AuthProvider } from './features/auth/AuthProvider'
 
@@ -15,7 +14,6 @@ import { useAuth } from './features/auth/useAuth'
 
 import './App.css'
 
-// Check whether the URL is a password reset link
 function isResetPasswordUrl() {
   return (
     window.location.pathname.replace(/\/$/, '') ===
@@ -30,7 +28,6 @@ function AppContent() {
     isResetPasswordUrl() ? 'reset' : 'login'
   )
 
-  // Handle browser back/forward navigation
   useEffect(() => {
     function handlePopState() {
       setAuthPage(
@@ -38,7 +35,10 @@ function AppContent() {
       )
     }
 
-    window.addEventListener('popstate', handlePopState)
+    window.addEventListener(
+      'popstate',
+      handlePopState
+    )
 
     return () => {
       window.removeEventListener(
@@ -48,7 +48,6 @@ function AppContent() {
     }
   }, [])
 
-  // Navigate back to login
   function goToLogin() {
     if (isResetPasswordUrl()) {
       window.history.replaceState(null, '', '/')
@@ -57,7 +56,6 @@ function AppContent() {
     setAuthPage('login')
   }
 
-  // Navigate to forgot password
   function goToForgotPassword() {
     if (isResetPasswordUrl()) {
       window.history.replaceState(null, '', '/')
@@ -66,14 +64,11 @@ function AppContent() {
     setAuthPage('forgot')
   }
 
-  // Navigate to registration
   function goToRegister() {
     setAuthPage('register')
   }
 
-  // Reset password page
-  // Allow users to open reset links from email
-  // even if they are not signed in.
+  // Password reset page opened from email
   if (authPage === 'reset') {
     return (
       <ResetPasswordPage
@@ -83,9 +78,8 @@ function AppContent() {
     )
   }
 
-  // User is not authenticated
   if (!isAuthenticated) {
-    // Registration page
+    // Registration
     if (authPage === 'register') {
       return (
         <RegisterPage
@@ -94,7 +88,7 @@ function AppContent() {
       )
     }
 
-    // Forgot password page
+    // Request a password reset email
     if (authPage === 'forgot') {
       return (
         <ForgotPasswordPage
@@ -103,7 +97,7 @@ function AppContent() {
       )
     }
 
-    // Login page
+    // Sign in
     return (
       <LoginPage
         onGoToRegister={goToRegister}
@@ -112,7 +106,6 @@ function AppContent() {
     )
   }
 
-  // Authenticated user
   return (
     <SportsProvider>
       <HomePage />
