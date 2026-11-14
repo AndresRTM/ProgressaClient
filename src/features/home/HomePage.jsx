@@ -24,9 +24,11 @@ import { getCalendarWeek } from './calendarApi'
 import { activityNameKey } from '../activities/activityCatalog'
 import {
   buildPlannedSession,
+  buildPlannedSessionChanges,
   completePlannedSession,
   createPlannedSession,
   deletePlannedSession,
+  updatePlannedSession,
 } from "./activitySessionsApi";
 
 // shortcut: "Repeat every week" adds separate copies for the coming weeks. Store a real
@@ -420,7 +422,25 @@ export default function HomePage() {
           sportPictures={pictureStorage.pictures}
           onFavoriteChange={preferences.setFavoriteSports}
           onClose={() => setDialog({ ...dialog, type: "detail" })}
-          onSave={(values) => {
+          onSave={async (values) => {
+            if (typeof detailActivity.id === "number") {
+              const sportName = activityTypes[values.type].label;
+              const changes = await buildPlannedSessionChanges(
+                values,
+                sportName,
+              );
+
+              await updatePlannedSession(detailActivity.id, {
+                ...changes,
+                notes: detailActivity.notes,
+              });
+              setSelectedDate(values.date);
+              setCalendarRefresh((current) => current + 1);
+              closeDialog();
+              setNotice("Activity updated.");
+              return true;
+            }
+
             const updated = updateActivity(detailActivity.id, values);
             if (!updated) return null;
             setSelectedDate(updated.date);
