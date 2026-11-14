@@ -40,7 +40,14 @@ export default function AddActivityDialog({
     .filter(Boolean)
   const [type, setType] = useState(activity?.type ?? activityType ?? favorites[0]?.id ?? null)
   const [date, setDate] = useState(activity?.date ?? selectedDate)
-  const [time, setTime] = useState(activity?.time ?? '18:00')
+  const [time, setTime] = useState(() => {
+    if (activity?.time) return activity.time;
+
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  });
   const [duration, setDuration] = useState(activity?.duration ?? 30)
   const [intensity, setIntensity] = useState(() => (activity ? intensityOf(activity) : 'moderate'))
   const [repeat, setRepeat] = useState(false)
