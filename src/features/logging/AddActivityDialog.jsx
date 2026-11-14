@@ -256,7 +256,7 @@ export default function AddActivityDialog({
           </label>
         </div>
 
-        {editing && (
+        {editing && typeof activity.id !== "number" && (
           <fieldset>
             <legend className="add-session-label">Intensity</legend>
             <div className="add-session-intensity">
