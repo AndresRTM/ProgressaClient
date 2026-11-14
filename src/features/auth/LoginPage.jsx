@@ -5,7 +5,10 @@ import { loginErrorMessage } from '../../services/authService'
 import { useAuth } from './useAuth'
 import './login.css'
 
-export default function LoginPage({ onGoToRegister }) {
+export default function LoginPage({
+  onGoToRegister,
+  onGoToForgotPassword,
+}) {
   const { login, signedOutReason } = useAuth()
 
   const [error, setError] = useState('')
@@ -87,8 +90,11 @@ export default function LoginPage({ onGoToRegister }) {
               spellCheck={false}
               maxLength={256}
               required
+              disabled={submitting}
               aria-invalid={error ? true : undefined}
-              aria-describedby={error ? 'login-error' : undefined}
+              aria-describedby={
+                error ? 'login-error' : undefined
+              }
             />
           </label>
 
@@ -104,20 +110,38 @@ export default function LoginPage({ onGoToRegister }) {
                 autoComplete="current-password"
                 maxLength={100}
                 required
+                disabled={submitting}
                 aria-invalid={error ? true : undefined}
-                aria-describedby={error ? 'login-error' : undefined}
+                aria-describedby={
+                  error ? 'login-error' : undefined
+                }
               />
 
               <button
                 type="button"
                 className="login-reveal"
-                onClick={() => setShowPassword((shown) => !shown)}
+                onClick={() =>
+                  setShowPassword((shown) => !shown)
+                }
+                disabled={submitting}
                 aria-pressed={showPassword}
               >
                 {showPassword ? 'Hide' : 'Show'}
               </button>
             </span>
           </label>
+
+          {/* Forgot password */}
+          <div className="login-register">
+            <button
+              type="button"
+              className="login-register-button"
+              onClick={onGoToForgotPassword}
+              disabled={submitting}
+            >
+              Forgot password?
+            </button>
+          </div>
 
           {/* Error message */}
           {error && (
@@ -149,6 +173,7 @@ export default function LoginPage({ onGoToRegister }) {
               type="button"
               className="login-register-button"
               onClick={onGoToRegister}
+              disabled={submitting}
             >
               Create account
             </button>
