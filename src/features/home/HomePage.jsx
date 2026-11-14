@@ -1,4 +1,3 @@
-
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import SettingsPage from '../settings/SettingsPage'
 import useSettings from '../settings/useSettings'
@@ -696,6 +695,11 @@ export default function HomePage() {
               })
             }
             onSave={(values) => {
+              if (detailActivity.recurring || typeof detailActivity.id === 'number') {
+                setNotice('Editing this workout is not available yet.')
+                return null
+              }
+
               const updated = updateActivity(
                 detailActivity.id,
                 values
@@ -728,14 +732,24 @@ export default function HomePage() {
             sportPictures={
               pictureStorage.pictures
             }
-            onEdit={(activity) =>
+            onEdit={(activity) => {
+              if (activity.recurring || typeof activity.id === 'number') {
+                setNotice('Editing this workout is not available yet.')
+                return
+              }
+
               setDialog({
                 ...dialog,
                 type: 'edit-activity',
                 activity,
               })
-            }
+            }}
             onDelete={async (activity) => {
+              if (activity.recurring) {
+                setNotice('Deleting recurring workouts is not available yet.')
+                return null
+              }
+
               if (
                 typeof activity.id === 'number'
               ) {
@@ -762,6 +776,7 @@ export default function HomePage() {
                     : current
                 )
 
+                setCalendarRefresh((current) => current + 1)
                 setNotice(
                   'Activity deleted.'
                 )
@@ -780,12 +795,26 @@ export default function HomePage() {
 
               return removed
             }}
-            onSetDone={(activity, done) => {
-              const updated =
-                setActivityDone(
+            onSetDone={async (activity, done, actualDurationInMinutes) => {
+              if (activity.recurring) {
+                setNotice('Completing recurring workouts is not available yet.')
+                return null
+              }
+
+              if (typeof activity.id === 'number') {
+                if (!done) return null
+
+                await completePlannedSession(
                   activity.id,
-                  done
+                  actualDurationInMinutes
                 )
+
+                setCalendarRefresh((current) => current + 1)
+                setNotice('Activity marked as done.')
+                return true
+              }
+
+              const updated = setActivityDone(activity.id, done)
 
               if (updated) {
                 setNotice(
@@ -803,39 +832,6 @@ export default function HomePage() {
 
       {/* Goals */}
       {dialog?.type === 'goals' && (
-            const removed = deleteActivity(activity.id);
-            if (!removed) return null;
-            setDeletedActivity(removed);
-            setNotice("");
-            closeDialog();
-            return removed;
-          }}
-          onSetDone={async (activity, done, actualDurationInMinutes) => {
-            if (typeof activity.id === "number") {
-              if (!done) return null;
-
-              await completePlannedSession(
-                activity.id,
-                actualDurationInMinutes,
-              );
-              setCalendarRefresh((current) => current + 1);
-              return true;
-            }
-
-            const updated = setActivityDone(activity.id, done);
-            if (updated) {
-              setNotice(
-                done
-                  ? "Activity marked as done."
-                  : "Activity marked as upcoming.",
-              );
-            }
-            return updated;
-          }}
-          onClose={closeDialog}
-        />
-      )}
-      {dialog?.type === "goals" && (
         <GoalsDialog
           key="goals"
           goals={apiGoals}
