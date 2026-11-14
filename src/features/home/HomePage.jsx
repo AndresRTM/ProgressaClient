@@ -1,3 +1,4 @@
+
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import SettingsPage from '../settings/SettingsPage'
 import useSettings from '../settings/useSettings'
@@ -41,9 +42,11 @@ import { createRecurringWorkout } from './recurringWorkoutsApi'
 import { activityNameKey } from '../activities/activityCatalog'
 import {
   buildPlannedSession,
+  buildPlannedSessionChanges,
   completePlannedSession,
   createPlannedSession,
   deletePlannedSession,
+  updatePlannedSession,
 } from './activitySessionsApi'
 
 export default function HomePage() {
@@ -131,7 +134,6 @@ export default function HomePage() {
     if (page !== 'plan' && page !== 'home') return
 
     const controller = new AbortController()
-
     setCalendarError('')
 
     const request =
@@ -694,10 +696,26 @@ export default function HomePage() {
                 type: 'detail',
               })
             }
-            onSave={(values) => {
-              if (detailActivity.recurring || typeof detailActivity.id === 'number') {
-                setNotice('Editing this workout is not available yet.')
+            onSave={async (values) => {
+              if (detailActivity.recurring) {
+                setNotice('Editing recurring workouts is not available yet.')
                 return null
+              }
+
+              if (typeof detailActivity.id === 'number') {
+                const sportName = activityTypes[values.type].label
+                const changes = await buildPlannedSessionChanges(values, sportName)
+
+                await updatePlannedSession(detailActivity.id, {
+                  ...changes,
+                  notes: detailActivity.notes,
+                })
+
+                setSelectedDate(values.date)
+                setCalendarRefresh((current) => current + 1)
+                closeDialog()
+                setNotice('Activity updated.')
+                return true
               }
 
               const updated = updateActivity(
@@ -733,8 +751,8 @@ export default function HomePage() {
               pictureStorage.pictures
             }
             onEdit={(activity) => {
-              if (activity.recurring || typeof activity.id === 'number') {
-                setNotice('Editing this workout is not available yet.')
+              if (activity.recurring) {
+                setNotice('Editing recurring workouts is not available yet.')
                 return
               }
 
@@ -745,14 +763,17 @@ export default function HomePage() {
               })
             }}
             onDelete={async (activity) => {
+              // Recurring workouts have their own schedule IDs.
+              // Do not delete them through local activity storage.
               if (activity.recurring) {
-                setNotice('Deleting recurring workouts is not available yet.')
+                setNotice(
+                  'Deleting recurring workouts is not available yet.'
+                )
                 return null
               }
 
-              if (
-                typeof activity.id === 'number'
-              ) {
+              // Ordinary backend session
+              if (typeof activity.id === 'number') {
                 if (activity.logged) {
                   return null
                 }
@@ -770,22 +791,24 @@ export default function HomePage() {
 
                 setDialog((current) =>
                   current?.type === 'detail' &&
-                  current.activity.id ===
-                    activity.id
+                  current.activity.id === activity.id
                     ? null
                     : current
                 )
 
-                setCalendarRefresh((current) => current + 1)
-                setNotice(
-                  'Activity deleted.'
+                setCalendarRefresh(
+                  (current) => current + 1
                 )
+
+                setNotice('Activity deleted.')
 
                 return activity
               }
 
-              const removed =
-                deleteActivity(activity.id)
+              // Local activity
+              const removed = deleteActivity(
+                activity.id
+              )
 
               if (!removed) return null
 
@@ -795,12 +818,21 @@ export default function HomePage() {
 
               return removed
             }}
-            onSetDone={async (activity, done, actualDurationInMinutes) => {
+            onSetDone={async (
+              activity,
+              done,
+              actualDurationInMinutes
+            ) => {
+              // Recurring occurrence cannot be completed
+              // with the ordinary session endpoint.
               if (activity.recurring) {
-                setNotice('Completing recurring workouts is not available yet.')
+                setNotice(
+                  'Completing recurring workouts is not available yet.'
+                )
                 return null
               }
 
+              // Complete an ordinary backend session
               if (typeof activity.id === 'number') {
                 if (!done) return null
 
@@ -809,12 +841,20 @@ export default function HomePage() {
                   actualDurationInMinutes
                 )
 
-                setCalendarRefresh((current) => current + 1)
+                setCalendarRefresh(
+                  (current) => current + 1
+                )
+
                 setNotice('Activity marked as done.')
+
                 return true
               }
 
-              const updated = setActivityDone(activity.id, done)
+              // Complete a locally stored activity
+              const updated = setActivityDone(
+                activity.id,
+                done
+              )
 
               if (updated) {
                 setNotice(
