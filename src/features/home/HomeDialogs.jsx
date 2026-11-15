@@ -474,7 +474,7 @@ export function ActivityDetailDialog({
             <button
               className="calendar-edit-button"
               type="button"
-              disabled={updatingStatus}
+              disabled={updatingStatus || isBackendActivity}
               onClick={() => onEdit(activity)}
             >
               <Icon name="edit" size={18} />
