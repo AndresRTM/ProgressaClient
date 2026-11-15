@@ -44,11 +44,7 @@ export async function buildPlannedSession(activity, sportName) {
     )
   }
 
-  const [calendarId, categories] = await Promise.all([
-    getDefaultCalendarId(),
-    getGoalActivities(),
-  ])
-
+  const categories = await getGoalActivities()
   const existingCategory = categories.find(
     (category) =>
       activityNameKey(category.name) ===
@@ -60,7 +56,6 @@ export async function buildPlannedSession(activity, sportName) {
     (await createGoalActivity(sportName))
 
   return {
-    calendarId,
     categoryId: category.id,
     scheduledAt: scheduledAt.toISOString(),
     plannedDurationInMinutes: activity.duration,
