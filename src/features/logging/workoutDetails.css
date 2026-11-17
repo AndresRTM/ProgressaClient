@@ -138,6 +138,10 @@
   background: #34443c;
 }
 
+.workout-time-options {
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+}
+
 @media (max-width: 350px) {
   .workout-duration-options {
     gap: 4px;

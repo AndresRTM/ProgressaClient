@@ -19,14 +19,10 @@ export async function buildPlannedSessionChanges(activity, sportName) {
     throw new Error('Choose a date and time in the future.')
   }
 
-  const categories = await getGoalActivities()
-  const existingCategory = categories.find(
-    (category) => activityNameKey(category.name) === activityNameKey(sportName),
-  )
-  const category = existingCategory ?? (await createGoalActivity(sportName))
-
+  const categoryId = await getOrCreateCategoryId(sportName)
+  
   return {
-    categoryId: category.id,
+    categoryId,
     scheduledAt: scheduledAt.toISOString(),
     plannedDurationInMinutes: activity.duration,
   }
@@ -38,6 +34,29 @@ export async function buildPlannedSession(activity, sportName) {
   return { calendarId, ...changes }
 }
 
+export async function buildCompletedSession(activity, sportName) {
+  const scheduledAt = new Date(`${activity.date}T${activity.time}`)
+
+  if (!Number.isFinite(scheduledAt.getTime()) || scheduledAt > new Date()) {
+    throw new Error('Choose a date and time that is now or in the past.')
+  }
+
+  const calendarId = await getDefaultCalendarId()
+  const categoryId = await getOrCreateCategoryId(sportName)
+
+  return {
+    calendarId,
+    categoryId,
+    scheduledAt: scheduledAt.toISOString(),
+    durationInMinutes: activity.duration,
+  }
+}
+
+export async function createCompletedSession(session) {
+  const { data } = await api.post('activity-sessions', session)
+  return data
+}
+
 export async function completePlannedSession(id, actualDurationInMinutes) {
   await api.patch(`activity-sessions/${id}/complete`, {
     actualDurationInMinutes,
@@ -46,4 +65,14 @@ export async function completePlannedSession(id, actualDurationInMinutes) {
 
 export async function updatePlannedSession(id, changes) {
   await api.put(`activity-sessions/${id}`, changes)
+}
+
+async function getOrCreateCategoryId(sportName) {
+  const categories = await getGoalActivities()
+  const existingCategory = categories.find(
+    (category) => activityNameKey(category.name) === activityNameKey(sportName),
+  )
+  const category = existingCategory ?? (await createGoalActivity(sportName))
+
+  return category.id
 }

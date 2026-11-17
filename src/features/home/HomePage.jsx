@@ -23,6 +23,8 @@ import { createGoalInApi, getGoals, updateGoalInApi } from './goalsApi'
 import { getCalendarWeek } from './calendarApi'
 import { activityNameKey } from '../activities/activityCatalog'
 import {
+  buildCompletedSession,
+  createCompletedSession,
   buildPlannedSession,
   buildPlannedSessionChanges,
   completePlannedSession,
@@ -70,15 +72,20 @@ export default function HomePage() {
     const controller = new AbortController();
 
     getGoals(controller.signal)
-      .then(setApiGoals)
-      .catch(() => {
-        if (!controller.signal.aborted) {
-          setGoalsError("Could not load your goals.");
-        }
-      });
+      .then((goals) => {
+        if (controller.signal.aborted) return;
 
-    return () => controller.abort();
-  }, []);
+        setApiGoals(goals);
+        setGoalsError('');
+      })
+       .catch(() => {
+          if (!controller.signal.aborted) {
+            setGoalsError('Could not load your goals.')
+          }
+        });
+
+        return () => controller.abort();
+      }, [calendarRefresh]);
   const [notice, setNotice] = useState('')
   const [deletedActivity, setDeletedActivity] = useState(null)
   const dialogType = dialog?.type
@@ -345,9 +352,24 @@ export default function HomePage() {
           onLoggingSettings={(draft) =>
             openLogPreferences("settings/logging", draft)
           }
-          onLogWorkout={(activity, plannedId) => {
-            const logged = logWorkout(activity, plannedId);
-            if (logged) setNotice("Workout logged. Your week is updated.");
+          onLogWorkout={async (activity, plannedId) => {
+            if (typeof plannedId === "number") {
+              await completePlannedSession(plannedId, activity.duration);
+              setCalendarRefresh((current) => current + 1);
+              setNotice("Workout logged.");
+              return true;
+            }
+            if (plannedId) {
+              const logged = logWorkout(activity, plannedId);
+              if (logged) setNotice("Workout logged.");
+              return logged;
+            }
+
+            const sportName = activityTypes[activity.type].label;
+            const session = await buildCompletedSession(activity, sportName);
+            const logged = await createCompletedSession(session);
+            setCalendarRefresh((current) => current + 1);
+            setNotice("Workout logged.");
             return logged;
           }}
           onSaveDailyLog={(date, patch) => {
