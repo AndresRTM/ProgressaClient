@@ -100,6 +100,14 @@ export function buildWeeks(sessions, monthStart, weekStartsOn, mode, activityTyp
   return { weeks, series }
 }
 
+export function formatMinutes(minutes) {
+  const total = Math.round(Math.abs(minutes))
+  const hours = Math.floor(total / 60)
+  const rest = total % 60
+  if (!hours) return `${rest} min`
+  return rest ? `${hours} h ${rest} min` : `${hours} h`
+}
+
 export function compareValues(current, previous) {
   const difference = current - previous
   return {

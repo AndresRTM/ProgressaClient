@@ -69,6 +69,42 @@
     opacity: 0.5;
   }
 }
+.activity-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.activity-kpi {
+  padding: 14px 16px;
+}
+.activity-kpi-label {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+.activity-kpi-value {
+  margin-top: 4px;
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+.activity-kpi-change {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.activity-kpi-change.is-up {
+  color: #2f6b1f;
+}
+.activity-kpi-change.is-down,
+.activity-kpi-change.is-same {
+  color: #68736b;
+}
 .activity-error p {
   font-size: 14px;
   line-height: 22px;

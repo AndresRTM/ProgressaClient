@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import Icon from '../../components/Icon'
 import { getToday, profileInitials } from '../home/homeData'
-import { addMonths, formatMonthTitle, monthStartOf } from './activityStats'
+import { useSports } from '../activities/useSports'
+import ActivityKpis from './ActivityKpis'
+import {
+  addMonths,
+  formatMonthTitle,
+  monthStartOf,
+  monthTotals,
+  withSportTypes,
+} from './activityStats'
 import useActivityMonth from './useActivityMonth'
 import './activity.css'
 
@@ -13,7 +21,11 @@ const TABS = [
 export default function ActivityPage({ profileName, onProfile }) {
   const [tab, setTab] = useState('overview')
   const [month, setMonth] = useState(() => monthStartOf(getToday()))
-  const { loading, error, retry } = useActivityMonth(month)
+  const { activityTypes } = useSports()
+  const { sessions, loading, error, retry } = useActivityMonth(month)
+  const completed = withSportTypes(sessions, activityTypes)
+  const current = monthTotals(completed, month)
+  const previous = monthTotals(completed, addMonths(month, -1))
 
   function selectTab(id) {
     setTab(id)
@@ -92,6 +104,9 @@ export default function ActivityPage({ profileName, onProfile }) {
               <div className="activity-skeleton activity-skeleton--kpi" />
               <div className="activity-skeleton activity-skeleton--chart" />
             </div>
+          )}
+          {tab === 'overview' && !loading && !error && (
+            <ActivityKpis current={current} previous={previous} />
           )}
           {tab === 'overview' && error && (
             <section className="home-card activity-error" role="alert">
