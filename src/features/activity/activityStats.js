@@ -13,6 +13,16 @@ export function addMonths(isoDate, count) {
   return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, '0')}-01`
 }
 
+const FULL_MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
+export function formatMonthTitle(monthStart) {
+  const [year, month] = monthStart.split('-').map(Number)
+  return `${FULL_MONTHS[month - 1]} ${year}`
+}
+
 function formatShortDate(isoDate) {
   const [, month, day] = isoDate.split('-').map(Number)
   return `${day} ${SHORT_MONTHS[month - 1]}`

@@ -276,7 +276,7 @@ export default function HomePage() {
             </>
           ) : page === "activity" ? (
             <Suspense fallback={null}>
-              <ActivityPage />
+              <ActivityPage profileName={profileName} onProfile={openSettings} />
             </Suspense>
           ) : (
             <>
