@@ -43,6 +43,41 @@
   flex-direction: column;
   gap: 12px;
 }
+.activity-skeletons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.activity-skeleton {
+  border-radius: 20px;
+  background: var(--track);
+}
+.activity-skeleton--kpi {
+  height: 96px;
+}
+.activity-skeleton--chart {
+  grid-column: 1 / -1;
+  height: 280px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .activity-skeleton {
+    animation: activity-pulse 1.4s ease-in-out infinite;
+  }
+}
+@keyframes activity-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+.activity-error p {
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 500;
+}
+.activity-action {
+  justify-content: center;
+  margin-top: 12px;
+}
 .activity-note {
   margin-top: 8px;
   color: var(--muted);

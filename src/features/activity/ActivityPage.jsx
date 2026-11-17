@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Icon from '../../components/Icon'
 import { getToday, profileInitials } from '../home/homeData'
 import { addMonths, formatMonthTitle, monthStartOf } from './activityStats'
+import useActivityMonth from './useActivityMonth'
 import './activity.css'
 
 const TABS = [
@@ -12,6 +13,7 @@ const TABS = [
 export default function ActivityPage({ profileName, onProfile }) {
   const [tab, setTab] = useState('overview')
   const [month, setMonth] = useState(() => monthStartOf(getToday()))
+  const { loading, error, retry } = useActivityMonth(month)
 
   function selectTab(id) {
     setTab(id)
@@ -84,6 +86,21 @@ export default function ActivityPage({ profileName, onProfile }) {
           aria-labelledby={`activity-tab-${tab}`}
           className="activity-panel"
         >
+          {tab === 'overview' && loading && (
+            <div className="activity-skeletons" aria-busy="true" aria-label="Loading your activity">
+              <div className="activity-skeleton activity-skeleton--kpi" />
+              <div className="activity-skeleton activity-skeleton--kpi" />
+              <div className="activity-skeleton activity-skeleton--chart" />
+            </div>
+          )}
+          {tab === 'overview' && error && (
+            <section className="home-card activity-error" role="alert">
+              <p>Could not load your activity.</p>
+              <button className="primary-button activity-action" onClick={retry}>
+                Try again
+              </button>
+            </section>
+          )}
           {tab === 'patterns' && (
             <section className="home-card">
               <h2>Patterns</h2>
