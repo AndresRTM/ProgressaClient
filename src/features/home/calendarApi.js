@@ -19,7 +19,7 @@ export async function getCalendarWeek(date, signal) {
         minute: '2-digit',
       }),
       duration: session.status === 'Completed'
-        ? session.actualDurationInMinutes ?? session.PlannedDurationInMinutes
+        ? session.actualDurationInMinutes ?? session.plannedDurationInMinutes
         : session.plannedDurationInMinutes,
       logged: session.status === 'Completed',
     }
