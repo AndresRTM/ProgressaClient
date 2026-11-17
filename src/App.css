@@ -853,3 +853,9 @@
     animation-duration: 0.01ms !important;
   }
 }
+@media (min-width: 1024px) {
+  .app-shell.page-wide {
+    max-width: 1120px;
+    padding-inline: 40px;
+  }
+}

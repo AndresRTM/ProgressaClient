@@ -14,7 +14,9 @@ function axisTicks(maxMinutes) {
 }
 
 function formatTick(minutes) {
-  return minutes === 0 ? '0' : formatMinutes(minutes)
+  if (minutes === 0) return '0'
+  if (minutes < 60) return `${minutes} min`
+  return `${Number((minutes / 60).toFixed(1))} h`
 }
 
 function WeekTooltip({ active, payload, label, series }) {
@@ -67,7 +69,7 @@ export default function TrainingChart({ weeks, series, mode, onModeChange, month
         </p>
       )}
 
-      <ul className="activity-legend">
+      <ul className="training-legend">
         {series.map((item) => (
           <li key={item.type}>
             <span className="activity-swatch" style={{ background: item.color }} />
@@ -76,17 +78,17 @@ export default function TrainingChart({ weeks, series, mode, onModeChange, month
         ))}
       </ul>
 
-      <div className="activity-chart" aria-hidden="true">
+      <div className="training-plot" aria-hidden="true">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }} accessibilityLayer={false}>
-            <XAxis dataKey="label" tickLine={false} axisLine={{ stroke: '#dfe3da' }} fontSize={11} />
+            <XAxis dataKey="label" interval={0} tickLine={false} axisLine={{ stroke: '#dfe3da' }} fontSize={11} />
             <YAxis
               ticks={ticks}
               domain={[0, ticks[ticks.length - 1]]}
               tickFormatter={formatTick}
               tickLine={false}
               axisLine={false}
-              width={48}
+              width={56}
               fontSize={11}
             />
             <Tooltip content={<WeekTooltip series={series} />} cursor={{ fill: '#f0f2ed' }} />
@@ -97,31 +99,33 @@ export default function TrainingChart({ weeks, series, mode, onModeChange, month
         </ResponsiveContainer>
       </div>
 
-      <table className="activity-sr-only">
-        <caption>Training time per week, {monthTitle}</caption>
-        <thead>
-          <tr>
-            <th scope="col">Week starting</th>
-            {series.map((item) => (
-              <th scope="col" key={item.type}>
-                {item.label}
-              </th>
-            ))}
-            <th scope="col">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {weeks.map((week) => (
-            <tr key={week.start}>
-              <th scope="row">{week.label}</th>
+      <div className="activity-sr-only">
+        <table>
+          <caption>Training time per week, {monthTitle}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Week starting</th>
               {series.map((item) => (
-                <td key={item.type}>{formatMinutes(week.values[item.type] ?? 0)}</td>
+                <th scope="col" key={item.type}>
+                  {item.label}
+                </th>
               ))}
-              <td>{formatMinutes(week.totalMinutes)}</td>
+              <th scope="col">Total</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {weeks.map((week) => (
+              <tr key={week.start}>
+                <th scope="row">{week.label}</th>
+                {series.map((item) => (
+                  <td key={item.type}>{formatMinutes(week.values[item.type] ?? 0)}</td>
+                ))}
+                <td>{formatMinutes(week.totalMinutes)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   )
 }

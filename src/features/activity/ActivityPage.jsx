@@ -61,41 +61,43 @@ export default function ActivityPage({ profileName, onProfile, weekStartsOn, onP
       </header>
 
       <main className="home-content" id="main-content" tabIndex={-1}>
-        <div className="activity-tabs" role="tablist" aria-label="Activity views" onKeyDown={onTabKeyDown}>
-          {TABS.map(({ id, label }) => (
-            <button
-              key={id}
-              id={`activity-tab-${id}`}
-              className={`activity-tab${tab === id ? ' is-selected' : ''}`}
-              role="tab"
-              aria-selected={tab === id}
-              aria-controls={`activity-panel-${id}`}
-              tabIndex={tab === id ? 0 : -1}
-              onClick={() => setTab(id)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <div className="activity-controls">
+          <div className="activity-tabs" role="tablist" aria-label="Activity views" onKeyDown={onTabKeyDown}>
+            {TABS.map(({ id, label }) => (
+              <button
+                key={id}
+                id={`activity-tab-${id}`}
+                className={`activity-tab${tab === id ? ' is-selected' : ''}`}
+                role="tab"
+                aria-selected={tab === id}
+                aria-controls={`activity-panel-${id}`}
+                tabIndex={tab === id ? 0 : -1}
+                onClick={() => setTab(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
-        <div className="month-picker">
-          <button
-            className="icon-button round-button previous-week"
-            onClick={() => setMonth(addMonths(month, -1))}
-            aria-label="Previous month"
-          >
-            <Icon name="chevron-right" size={16} />
-          </button>
-          <p className="month-picker-label" aria-live="polite">
-            {formatMonthTitle(month)}
-          </p>
-          <button
-            className="icon-button round-button"
-            onClick={() => setMonth(addMonths(month, 1))}
-            aria-label="Next month"
-          >
-            <Icon name="chevron-right" size={16} />
-          </button>
+          <div className="month-picker">
+            <button
+              className="icon-button round-button previous-week"
+              onClick={() => setMonth(addMonths(month, -1))}
+              aria-label="Previous month"
+            >
+              <Icon name="chevron-right" size={16} />
+            </button>
+            <p className="month-picker-label" aria-live="polite">
+              {formatMonthTitle(month)}
+            </p>
+            <button
+              className="icon-button round-button"
+              onClick={() => setMonth(addMonths(month, 1))}
+              aria-label="Next month"
+            >
+              <Icon name="chevron-right" size={16} />
+            </button>
+          </div>
         </div>
 
         <div

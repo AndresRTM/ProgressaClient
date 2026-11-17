@@ -7,6 +7,11 @@
   font-weight: 700;
   letter-spacing: -0.65px;
 }
+.activity-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 .activity-tabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -57,7 +62,7 @@
 }
 .activity-skeleton--chart {
   grid-column: 1 / -1;
-  height: 280px;
+  height: 436px;
 }
 @media (prefers-reduced-motion: no-preference) {
   .activity-skeleton {
@@ -134,7 +139,7 @@
   background: var(--ink);
   color: white;
 }
-.activity-legend {
+.training-legend {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 14px;
@@ -144,7 +149,7 @@
   font-size: 12px;
   line-height: 18px;
 }
-.activity-legend li,
+.training-legend li,
 .activity-tooltip-row {
   display: flex;
   align-items: center;
@@ -156,7 +161,7 @@
   flex-shrink: 0;
   border-radius: 3px;
 }
-.activity-chart {
+.training-plot {
   height: 240px;
   margin-top: 12px;
 }
@@ -205,5 +210,31 @@
 @media (min-width: 600px) {
   .activity-panel {
     gap: 16px;
+  }
+  .activity-controls {
+    gap: 16px;
+  }
+  .activity-kpis,
+  .activity-skeletons {
+    gap: 16px;
+  }
+}
+@media (min-width: 1024px) {
+  .activity-controls {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .activity-tabs {
+    width: 320px;
+  }
+  .month-picker {
+    gap: 16px;
+  }
+  .training-plot {
+    height: 340px;
+  }
+  .activity-skeleton--chart {
+    height: 536px;
   }
 }
