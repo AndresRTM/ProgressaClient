@@ -748,32 +748,6 @@
   color: var(--muted);
   font-size: 11px;
 }
-.expanded-summary {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  margin: 24px 0;
-}
-.expanded-summary .activity-chart {
-  width: 138px;
-  height: 138px;
-}
-.expanded-summary .donut-center strong {
-  font-size: 30px;
-  line-height: 36px;
-}
-.expanded-summary .donut-center > span {
-  font-size: 11px;
-}
-.expanded-summary p {
-  color: var(--muted);
-  font-size: 13px;
-}
-.expanded-summary p strong {
-  color: var(--ink);
-  font-weight: 600;
-}
 @media (min-width: 600px) {
   body {
     background: #eef1e9;

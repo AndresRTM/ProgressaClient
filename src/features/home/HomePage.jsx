@@ -10,7 +10,6 @@ import PlanPage from '../plan/PlanPage'
 import { ActivitySummary, BottomNav, GoalsCard, HomeHeader, WeekCard } from './HomeCards'
 import {
   ActivityDetailDialog,
-  ActivityDialog,
   AddGoalDialog,
   EditGoalDialog,
   GoalsDialog,
@@ -559,15 +558,6 @@ export default function HomePage() {
         />
       )}
 
-      {dialog?.type === "activity" && (
-        <ActivityDialog
-          key="activity"
-          summary={summary}
-          dailyLog={dailyLogs[selectedDate]}
-          units={preferences.settings.units}
-          onClose={closeDialog}
-        />
-      )}
       {dialog?.type === "profile" && (
         <ProfileDialog
           key="profile"
