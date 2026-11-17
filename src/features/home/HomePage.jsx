@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import SettingsPage from '../settings/SettingsPage'
 import useSettings from '../settings/useSettings'
 import useSportPictures from '../settings/useSportPictures'
@@ -30,6 +30,8 @@ import {
   deletePlannedSession,
   updatePlannedSession,
 } from "./activitySessionsApi";
+
+const ActivityPage = lazy(() => import('../activity/ActivityPage'))
 
 // shortcut: "Repeat every week" adds separate copies for the coming weeks. Store a real
 // weekly rule instead if repeated sessions need to be edited or stopped together.
@@ -208,7 +210,7 @@ export default function HomePage() {
     closeDialog()
     if (tab === 'plan' || tab === 'home') setSelectedDate(getToday())
     if (tab === 'plan') setSelectedDate(getToday())
-    if (tab === 'goals' || tab === 'activity') {
+    if (tab === 'goals') {
       setDialog({ type: tab })
     } else if (tab !== page) {
       navigatePage(tab)
@@ -272,6 +274,10 @@ export default function HomePage() {
                 onAdd={openActivityForm}
               />
             </>
+          ) : page === "activity" ? (
+            <Suspense fallback={null}>
+              <ActivityPage />
+            </Suspense>
           ) : (
             <>
               <HomeHeader profileName={profileName} onProfile={openSettings} />
@@ -301,9 +307,7 @@ export default function HomePage() {
             </>
           )}
           <BottomNav
-            activeTab={
-              ["goals", "activity"].includes(dialog?.type) ? dialog.type : page
-            }
+            activeTab={dialog?.type === "goals" ? "goals" : page}
             onNavigate={navigate}
             onAdd={() => setDialog({ type: "log-today", date: selectedDate })}
           />
