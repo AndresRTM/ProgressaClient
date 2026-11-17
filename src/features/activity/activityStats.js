@@ -18,9 +18,12 @@ const FULL_MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
+export function formatMonthName(monthStart) {
+  return FULL_MONTHS[Number(monthStart.split('-')[1]) - 1]
+}
+
 export function formatMonthTitle(monthStart) {
-  const [year, month] = monthStart.split('-').map(Number)
-  return `${FULL_MONTHS[month - 1]} ${year}`
+  return `${formatMonthName(monthStart)} ${monthStart.split('-')[0]}`
 }
 
 function formatShortDate(isoDate) {

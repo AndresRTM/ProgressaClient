@@ -3,8 +3,11 @@ import Icon from '../../components/Icon'
 import { getToday, profileInitials } from '../home/homeData'
 import { useSports } from '../activities/useSports'
 import ActivityKpis from './ActivityKpis'
+import TrainingChart from './TrainingChart'
 import {
   addMonths,
+  buildWeeks,
+  formatMonthName,
   formatMonthTitle,
   monthStartOf,
   monthTotals,
@@ -18,14 +21,17 @@ const TABS = [
   { id: 'patterns', label: 'Patterns' },
 ]
 
-export default function ActivityPage({ profileName, onProfile }) {
+export default function ActivityPage({ profileName, onProfile, weekStartsOn, onPlan }) {
   const [tab, setTab] = useState('overview')
+  const [mode, setMode] = useState('month')
   const [month, setMonth] = useState(() => monthStartOf(getToday()))
   const { activityTypes } = useSports()
   const { sessions, loading, error, retry } = useActivityMonth(month)
   const completed = withSportTypes(sessions, activityTypes)
   const current = monthTotals(completed, month)
   const previous = monthTotals(completed, addMonths(month, -1))
+  const { weeks, series } = buildWeeks(completed, month, weekStartsOn, mode, activityTypes)
+  const isFutureMonth = month > monthStartOf(getToday())
 
   function selectTab(id) {
     setTab(id)
@@ -106,7 +112,27 @@ export default function ActivityPage({ profileName, onProfile }) {
             </div>
           )}
           {tab === 'overview' && !loading && !error && (
-            <ActivityKpis current={current} previous={previous} />
+            <>
+              <ActivityKpis current={current} previous={previous} />
+              {current.sessions > 0 ? (
+                <TrainingChart
+                  weeks={weeks}
+                  series={series}
+                  mode={mode}
+                  onModeChange={setMode}
+                  monthTitle={formatMonthTitle(month)}
+                />
+              ) : (
+                <section className="home-card activity-error">
+                  <p>No sessions in {formatMonthName(month)} yet</p>
+                  {!isFutureMonth && (
+                    <button className="primary-button activity-action" onClick={onPlan}>
+                      Plan a session
+                    </button>
+                  )}
+                </section>
+              )}
+            </>
           )}
           {tab === 'overview' && error && (
             <section className="home-card activity-error" role="alert">

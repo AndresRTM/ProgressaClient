@@ -276,7 +276,12 @@ export default function HomePage() {
             </>
           ) : page === "activity" ? (
             <Suspense fallback={null}>
-              <ActivityPage profileName={profileName} onProfile={openSettings} />
+              <ActivityPage
+                profileName={profileName}
+                onProfile={openSettings}
+                weekStartsOn={weekStartsOn}
+                onPlan={() => navigate('plan')}
+              />
             </Suspense>
           ) : (
             <>
