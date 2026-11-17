@@ -10,6 +10,7 @@ export default function ActivityPicker({
   favoriteSports = [],
   sportPictures = {},
   activities = [],
+  plannedSessions = [],
   date,
   heading = 'Favorites',
   onSelect,
@@ -68,6 +69,20 @@ export default function ActivityPicker({
     else if (favoriteSports.length < MAX_FAVORITES) onFavoriteChange([...favoriteSports, id])
   }
 
+  function isPlanned(sport) {
+    return plannedSessions.some(
+      (session) => activityNameKey(session.categoryName) === activityNameKey(sport.label),
+    ) || activities.some(
+      (activity) => activity.type === sport.id && activity.date === date && !activity.logged,
+    )
+  }
+
+  const plannedSports = sports.filter(isPlanned)
+  const quickSports = [
+    ...plannedSports,
+    ...favorites.filter((sport) => !isPlanned(sport)),
+  ].slice(0, MAX_FAVORITES)
+
   return (
     <section className="activity-picker" aria-label="Choose an activity">
       {!isSearching && (
@@ -83,11 +98,8 @@ export default function ActivityPicker({
             )}
           </div>
           <div className="activity-picker-grid">
-            {favorites.map((sport) => {
-              const planned = activities.some(
-                (activity) =>
-                  activity.type === sport.id && activity.date === date && !activity.logged,
-              )
+            {quickSports.map((sport) => {
+              const planned = isPlanned(sport)
               return (
                 <button
                   key={sport.id}
@@ -103,7 +115,7 @@ export default function ActivityPicker({
               )
             })}
           </div>
-          {favorites.length === 0 && (
+          {quickSports.length === 0 && (
             <p className="activity-no-results">Search below to choose an activity.</p>
           )}
         </>
@@ -149,7 +161,7 @@ export default function ActivityPicker({
                     <SportPicture sport={sport} picture={sportPictures[sport.id]} size={40} />
                     <span>
                       <strong>{sport.label}</strong>
-                      <small>{sport.category}</small>
+                      <small>{sport.category}{isPlanned(sport) && ' .Planned'}</small>
                     </span>
                   </button>
                   {onFavoriteChange && (
