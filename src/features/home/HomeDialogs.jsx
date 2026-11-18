@@ -2,10 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Icon from "../../components/Icon";
 import Sheet from "../../components/Sheet";
 import SportPicture from "../settings/SportPicture";
-import DailyLogSummary from "../logging/DailyLogSummary";
 import { useSports } from "../activities/useSports";
 import { formatTime } from "../settings/formatTime";
-import { ActivityChart } from "./HomeCards";
 import { formatDuration } from "./homeData";
 import "./calendarActivity.css";
 import "./goalsDialog.css";
@@ -618,35 +616,6 @@ export function GoalsDialog({
       <button className="primary-button" type="button" onClick={onAdd}>
         Add goal
       </button>
-    </Sheet>
-  );
-}
-
-export function ActivityDialog({ summary, dailyLog, units, onClose }) {
-  return (
-    <Sheet title="A week in motion" onClose={onClose}>
-      <div className="expanded-summary">
-        <ActivityChart summary={summary} />
-        <p>
-          <strong>{formatDuration(summary.totalMinutes)}</strong> of movement
-          this week
-        </p>
-      </div>
-      <DailyLogSummary log={dailyLog} units={units} embedded />
-      <dl className="detail-list">
-        {summary.byType.map((type) => (
-          <div key={type.type}>
-            <dt>
-              <span className="legend-dot" style={{ background: type.color }} />
-              {type.label}
-              <small>
-                {type.sessions} {type.sessions === 1 ? "session" : "sessions"}
-              </small>
-            </dt>
-            <dd>{formatDuration(type.minutes)}</dd>
-          </div>
-        ))}
-      </dl>
     </Sheet>
   );
 }
