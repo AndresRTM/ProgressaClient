@@ -84,7 +84,14 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(
     () => ({
-      user: session ? { id: session.userId, email: session.email } : null,
+      user: session
+        ? {
+            id: session.userId,
+            email: session.email,
+            firstName: session.firstName,
+            lastName: session.lastName,
+          }
+        : null,
       isAuthenticated: session !== null,
       signedOutReason,
       login,
@@ -92,7 +99,7 @@ export function AuthProvider({ children }) {
       deleteAccount,
     }),
     [session, signedOutReason, login, logout, deleteAccount],
-  )
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

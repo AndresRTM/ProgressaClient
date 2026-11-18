@@ -44,6 +44,26 @@
 .profile-button:hover {
   background: #b4e367;
 }
+.profile-button--named {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  max-width: 50%;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.profile-button--named span {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-button--named svg {
+  flex-shrink: 0;
+}
 .welcome {
   margin-top: 16px;
   margin-bottom: 8px;
@@ -355,6 +375,26 @@
 .progress-fill--swimming {
   background: var(--swimming);
 }
+.summary-toggle {
+  display: flex;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--page);
+}
+
+.summary-toggle button {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 999px;
+  background: transparent;
+  font-weight: 600;
+}
+
+.summary-toggle button[aria-pressed="true"] {
+  background: var(--green);
+}
 .summary-content {
   display: flex;
   gap: 12px;
@@ -383,6 +423,10 @@
   font-size: 18px;
   line-height: 22px;
   font-weight: 500;
+}
+.activity-chart--time .donut-center strong {
+  font-size: 12px;
+  white-space: nowrap;
 }
 .donut-center > span {
   margin-top: 1px;
@@ -594,6 +638,31 @@
   color: var(--muted);
   font-size: 13px;
   line-height: 20px;
+}
+.profile-dialog-avatar {
+  margin: 0 auto 16px;
+}
+
+.profile-dialog-details {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.profile-dialog-details > div {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--page);
+}
+
+.profile-dialog-details dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.profile-dialog-details dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
 }
 .home-form {
   display: flex;

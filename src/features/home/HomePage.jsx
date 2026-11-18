@@ -1,27 +1,47 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import SettingsPage from '../settings/SettingsPage'
-import useSettings from '../settings/useSettings'
-import useSportPictures from '../settings/useSportPictures'
-import AddActivityDialog from '../logging/AddActivityDialog'
-import LogTodayDialog from '../logging/LogTodayDialog'
-import DailyLogSummary from '../logging/DailyLogSummary'
-import { useSports } from '../activities/useSports'
-import PlanPage from '../plan/PlanPage'
-import GoalsPage from '../goals/GoalsPage'
-import { ActivitySummary, BottomNav, GoalsCard, HomeHeader, WeekCard } from './HomeCards'
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import SettingsPage from "../settings/SettingsPage";
+import useSettings from "../settings/useSettings";
+import useSportPictures from "../settings/useSportPictures";
+import AddActivityDialog from "../logging/AddActivityDialog";
+import LogTodayDialog from "../logging/LogTodayDialog";
+import DailyLogSummary from "../logging/DailyLogSummary";
+import { useSports } from "../activities/useSports";
+import { useAuth } from "../auth/useAuth";
+import PlanPage from "../plan/PlanPage";
+import GoalsPage from "../goals/GoalsPage";
+import {
+  ActivitySummary,
+  BottomNav,
+  GoalsCard,
+  HomeHeader,
+  WeekCard,
+} from "./HomeCards";
 import {
   ActivityDetailDialog,
   AddGoalDialog,
   EditGoalDialog,
   GoalsDialog,
   ProfileDialog,
-} from './HomeDialogs'
-import { calculateSummary, dateAtOffset, getToday, startOfWeek, weeksBetween } from './homeData'
-import useHomeData from './useHomeData'
-import useRoute from './useRoute'
-import { createGoalInApi, getGoals, updateGoalInApi } from './goalsApi'
-import { getCalendarWeek } from './calendarApi'
-import { activityNameKey } from '../activities/activityCatalog'
+} from "./HomeDialogs";
+import {
+  calculateSummary,
+  dateAtOffset,
+  getToday,
+  startOfWeek,
+  weeksBetween,
+} from "./homeData";
+import useHomeData from "./useHomeData";
+import useRoute from "./useRoute";
+import { createGoalInApi, getGoals, updateGoalInApi } from "./goalsApi";
+import { getCalendarWeek } from "./calendarApi";
+import { activityNameKey } from "../activities/activityCatalog";
 import {
   buildCompletedSession,
   createCompletedSession,
@@ -33,16 +53,15 @@ import {
   updatePlannedSession,
 } from "./activitySessionsApi";
 
-const ActivityPage = lazy(() => import('../activity/ActivityPage'))
+const ActivityPage = lazy(() => import("../activity/ActivityPage"));
 
 // shortcut: "Repeat every week" adds separate copies for the coming weeks. Store a real
 // weekly rule instead if repeated sessions need to be edited or stopped together.
-const REPEAT_WEEKS = 12
+const REPEAT_WEEKS = 12;
 
 export default function HomePage() {
   const {
     activities,
-    profileName,
     dailyLogs,
     dataError,
     logWorkout,
@@ -51,25 +70,27 @@ export default function HomePage() {
     deleteActivity,
     restoreActivity,
     saveDailyLog,
-    updateProfile,
-  } = useHomeData()
-  const { activityTypes } = useSports()
-  const preferences = useSettings()
-  const pictureStorage = useSportPictures()
-  const { page, navigate: navigatePage, goBack } = useRoute()
-  const isSettings = page.startsWith('settings')
-  const previousPage = useRef(page)
-  const homeScroll = useRef(0)
-  const { timeFormat, weekStart: weekStartsOn } = preferences.settings.units
-  const today = getToday()
-  const [selectedDate, setSelectedDate] = useState(today)
-  const [dialog, setDialog] = useState(null)
-  const [apiGoals, setApiGoals] = useState(null)
-  const [goalsError, setGoalsError] = useState('')
-  const [calendarWeek, setCalendarWeek] = useState(null)
-  const [calendarRefresh, setCalendarRefresh] = useState(0)
-  const [calendarError, setCalendarError] = useState('')
-  const [deletedCalendarIds, setDeletedCalendarIds] = useState([])
+  } = useHomeData();
+  const { user } = useAuth();
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
+  const profileName = fullName || user?.email || "?";
+  const { activityTypes } = useSports();
+  const preferences = useSettings();
+  const pictureStorage = useSportPictures();
+  const { page, navigate: navigatePage, goBack } = useRoute();
+  const isSettings = page.startsWith("settings");
+  const previousPage = useRef(page);
+  const homeScroll = useRef(0);
+  const { timeFormat, weekStart: weekStartsOn } = preferences.settings.units;
+  const today = getToday();
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [dialog, setDialog] = useState(null);
+  const [apiGoals, setApiGoals] = useState(null);
+  const [goalsError, setGoalsError] = useState("");
+  const [calendarWeek, setCalendarWeek] = useState(null);
+  const [calendarRefresh, setCalendarRefresh] = useState(0);
+  const [calendarError, setCalendarError] = useState("");
+  const [deletedCalendarIds, setDeletedCalendarIds] = useState([]);
   useEffect(() => {
     const controller = new AbortController();
 
@@ -78,20 +99,20 @@ export default function HomePage() {
         if (controller.signal.aborted) return;
 
         setApiGoals(goals);
-        setGoalsError('');
+        setGoalsError("");
       })
-       .catch(() => {
-          if (!controller.signal.aborted) {
-            setGoalsError('Could not load your goals.')
-          }
-        });
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setGoalsError("Could not load your goals.");
+        }
+      });
 
-        return () => controller.abort();
-      }, [calendarRefresh]);
-  const [notice, setNotice] = useState('')
-  const [deletedActivity, setDeletedActivity] = useState(null)
-  const dialogType = dialog?.type
-  const weekStart = startOfWeek(selectedDate, weekStartsOn)
+    return () => controller.abort();
+  }, [calendarRefresh]);
+  const [notice, setNotice] = useState("");
+  const [deletedActivity, setDeletedActivity] = useState(null);
+  const dialogType = dialog?.type;
+  const weekStart = startOfWeek(selectedDate, weekStartsOn);
   const planActivities =
     calendarWeek?.start === weekStart
       ? [
@@ -113,7 +134,7 @@ export default function HomePage() {
 
     const controller = new AbortController();
 
-    setCalendarError('')
+    setCalendarError("");
 
     const request =
       weekStartsOn === "sun"
@@ -142,92 +163,101 @@ export default function HomePage() {
 
     return () => controller.abort();
   }, [page, weekStart, weekStartsOn, calendarRefresh]);
-  const thisWeekStart = startOfWeek(today, weekStartsOn)
+  const thisWeekStart = startOfWeek(today, weekStartsOn);
   const weekNavigation = {
     weekOffset: weeksBetween(thisWeekStart, weekStart),
     // Other weeks open on their first day; coming back to this week opens on today.
     onChangeWeek: (delta) => {
-      const nextWeek = dateAtOffset(weekStart, delta * 7)
-      setSelectedDate(nextWeek === thisWeekStart ? today : nextWeek)
+      const nextWeek = dateAtOffset(weekStart, delta * 7);
+      setSelectedDate(nextWeek === thisWeekStart ? today : nextWeek);
     },
     onThisWeek: () => setSelectedDate(today),
-  }
-  const summary = calculateSummary(planActivities, weekStart, activityTypes)
+  };
+  const completedActivities = planActivities.filter(
+    (activity) => activity.logged,
+  );
+  const summary = calculateSummary(
+    completedActivities,
+    weekStart,
+    activityTypes,
+  );
   const detailActivity = ["detail", "edit-activity"].includes(dialog?.type)
     ? planActivities.find((activity) => activity.id === dialog.activity.id)
     : null;
 
-  const closeDialog = () => setDialog(null)
+  const closeDialog = () => setDialog(null);
   const openActivityForm = (date = selectedDate, activityType) => {
-    setSelectedDate(date)
-    setDialog({ type: 'add-activity', date, activityType })
-  }
+    setSelectedDate(date);
+    setDialog({ type: "add-activity", date, activityType });
+  };
 
   function openSettings() {
-    homeScroll.current = window.scrollY
-    closeDialog()
-    navigatePage('settings')
+    homeScroll.current = window.scrollY;
+    closeDialog();
+    navigatePage("settings");
   }
 
   function openLogPreferences(nextPage, draft) {
-    setDialog((current) => ({ ...current, initialValues: draft }))
-    navigatePage(nextPage)
+    setDialog((current) => ({ ...current, initialValues: draft }));
+    navigatePage(nextPage);
   }
 
   useLayoutEffect(() => {
-    if (!isSettings && previousPage.current.startsWith('settings')) {
-      window.scrollTo(0, homeScroll.current)
-      if (dialog?.type !== 'log-today')
-        document.querySelector('[data-settings-trigger]')?.focus({ preventScroll: true })
+    if (!isSettings && previousPage.current.startsWith("settings")) {
+      window.scrollTo(0, homeScroll.current);
+      if (dialog?.type !== "log-today")
+        document
+          .querySelector("[data-settings-trigger]")
+          ?.focus({ preventScroll: true });
+    } else if (page !== previousPage.current) {
+      window.scrollTo(0, 0);
     }
-    else if (page !== previousPage.current) {
-      window.scrollTo(0, 0)
-    }
-    previousPage.current = page
-  }, [page, isSettings, dialog?.type])
+    previousPage.current = page;
+  }, [page, isSettings, dialog?.type]);
 
   useEffect(() => {
-    if (!notice) return
-    const timeout = setTimeout(() => setNotice(''), 4000)
-    return () => clearTimeout(timeout)
-  }, [notice])
+    if (!notice) return;
+    const timeout = setTimeout(() => setNotice(""), 4000);
+    return () => clearTimeout(timeout);
+  }, [notice]);
 
   useEffect(() => {
-    if (!deletedActivity || dialogType) return
-    const timeout = setTimeout(() => setDeletedActivity(null), 5000)
-    return () => clearTimeout(timeout)
-  }, [deletedActivity, dialogType])
+    if (!deletedActivity || dialogType) return;
+    const timeout = setTimeout(() => setDeletedActivity(null), 5000);
+    return () => clearTimeout(timeout);
+  }, [deletedActivity, dialogType]);
 
   function undoDelete() {
-    if (!deletedActivity) return null
-    const restored = restoreActivity(deletedActivity)
+    if (!deletedActivity) return null;
+    const restored = restoreActivity(deletedActivity);
     if (restored) {
-      setSelectedDate(restored.date)
-      setDeletedActivity(null)
-      setNotice('Activity restored.')
+      setSelectedDate(restored.date);
+      setDeletedActivity(null);
+      setNotice("Activity restored.");
     } else {
-      setNotice('This activity could not be restored. Please try again.')
+      setNotice("This activity could not be restored. Please try again.");
     }
-    return restored
+    return restored;
   }
 
-  const showUndo = Boolean(deletedActivity && !dialog)
+  const showUndo = Boolean(deletedActivity && !dialog);
 
   // The goals dialog is only used from Settings, the Goals page has no dialog to return to.
-  const backToGoals = () => setDialog(page === 'goals' ? null : { type: 'goals' })
+  const backToGoals = () =>
+    setDialog(page === "goals" ? null : { type: "goals" });
 
   function navigate(tab) {
-    closeDialog()
-    if (tab === 'plan' || tab === 'home') setSelectedDate(getToday())
+    closeDialog();
+    if (tab === "plan" || tab === "home") setSelectedDate(getToday());
     if (tab !== page) {
-      navigatePage(tab)
+      navigatePage(tab);
     } else {
       window.scrollTo({
         top: 0,
-        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-          ? 'instant'
-          : 'smooth',
-      })
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+      });
     }
   }
 
@@ -276,7 +306,9 @@ export default function HomePage() {
                 onAdd={() => setDialog({ type: "add-goal" })}
                 onEdit={(goal) => setDialog({ type: "edit-goal", goal })}
                 onRemoved={(id) =>
-                  setApiGoals((current) => current.filter((goal) => goal.id !== id))
+                  setApiGoals((current) =>
+                    current.filter((goal) => goal.id !== id),
+                  )
                 }
               />
             </>
@@ -307,12 +339,16 @@ export default function HomePage() {
                 profileName={profileName}
                 onProfile={openSettings}
                 weekStartsOn={weekStartsOn}
-                onPlan={() => navigate('plan')}
+                onPlan={() => navigate("plan")}
               />
             </Suspense>
           ) : (
             <>
-              <HomeHeader profileName={profileName} onProfile={openSettings} />
+              <HomeHeader
+                profileName={profileName}
+                profileFirstName={user?.firstName?.trim() || "Settings"}
+                onProfile={openSettings}
+              />
               <main className="home-content" id="main-content" tabIndex={-1}>
                 <WeekCard
                   {...{ weekStart, selectedDate, timeFormat }}
@@ -603,12 +639,8 @@ export default function HomePage() {
         <ProfileDialog
           key="profile"
           profileName={profileName}
+          user={user}
           onClose={closeDialog}
-          onSave={(name) => {
-            updateProfile(name);
-            closeDialog();
-            setNotice("Profile updated.");
-          }}
         />
       )}
     </div>
