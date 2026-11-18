@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 const pages = new Set([
   'plan',
+  'goals',
   'settings',
   'settings/logging',
   'settings/sports',
