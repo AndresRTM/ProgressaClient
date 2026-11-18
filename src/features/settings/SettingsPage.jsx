@@ -112,8 +112,8 @@ export default function SettingsPage({
                 {profileInitials(profileName)}
               </span>
               <span className="settings-menu-copy">
-                <strong>Your profile</strong>
-                <small>Name, photo and age</small>
+                <strong>{profileName}</strong>
+                <small>Your profile</small>
               </span>
               <Icon name="chevron-right" size={18} />
             </button>

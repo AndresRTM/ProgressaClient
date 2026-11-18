@@ -4,7 +4,7 @@ import Sheet from "../../components/Sheet";
 import SportPicture from "../settings/SportPicture";
 import { useSports } from "../activities/useSports";
 import { formatTime } from "../settings/formatTime";
-import { formatDuration } from "./homeData";
+import { formatDuration, profileInitials } from "./homeData";
 import "./calendarActivity.css";
 import "./goalsDialog.css";
 import {
@@ -620,33 +620,27 @@ export function GoalsDialog({
   );
 }
 
-export function ProfileDialog({ profileName, onSave, onClose }) {
+export function ProfileDialog({ profileName, user, onClose }) {
   return (
-    <Sheet title="Your space." onClose={onClose}>
-      <p className="sheet-description">Make it feel a little more like you.</p>
-      <form
-        className="home-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSave(new FormData(event.currentTarget).get("name").trim());
-        }}
-      >
-        <label>
-          Display name
-          <input
-            name="name"
-            defaultValue={profileName}
-            maxLength="40"
-            pattern=".*\S.*"
-            required
-            autoComplete="nickname"
-          />
-        </label>
-        <button className="primary-button" type="submit">
-          Save profile
-          <Icon name="check" size={19} />
-        </button>
-      </form>
+    <Sheet title="Your profile" onClose={onClose}>
+      <div className="settings-avatar profile-dialog-avatar" aria-hidden="true">
+        {profileInitials(profileName)}
+      </div>
+
+      <dl className="profile-dialog-details">
+        <div>
+          <dt>First name</dt>
+          <dd>{user?.firstName || "—"}</dd>
+        </div>
+        <div>
+          <dt>Last name</dt>
+          <dd>{user?.lastName || "—"}</dd>
+        </div>
+        <div>
+          <dt>Email</dt>
+          <dd>{user?.email || "—"}</dd>
+        </div>
+      </dl>
     </Sheet>
   );
 }

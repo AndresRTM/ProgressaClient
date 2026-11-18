@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Icon from "../../components/Icon";
 import SportPicture from "../settings/SportPicture";
 import { useSports } from "../activities/useSports";
@@ -12,6 +13,7 @@ import {
 
 export function HomeHeader({
   profileName,
+  profileFirstName,
   onProfile,
   title = "Make time for what moves you.",
   subtitle = "Your goals. Your rhythm.",
@@ -23,12 +25,19 @@ export function HomeHeader({
           Progressa
         </a>
         <button
-          className="profile-button"
+          className={profileFirstName ? "profile-button profile-button--named" : "profile-button"}
           onClick={onProfile}
           aria-label="Open settings"
           data-settings-trigger
         >
-          {profileInitials(profileName)}
+          {profileFirstName ? (
+            <>
+              <span>{profileFirstName}</span>
+              <Icon name="sliders" size={18} />
+            </>
+          ) : (
+            profileInitials(profileName)
+          )}
         </button>
       </div>
       <div className="welcome">
@@ -316,15 +325,19 @@ export function GoalsCard({ goals, goalsError, onAdd }) {
   );
 }
 
-export function ActivityChart({ summary }) {
+export function ActivityChart({ summary, mode }) {
   const radius = 34.5;
   const circumference = 2 * Math.PI * radius;
-  const sessionLabel = summary.sessions === 1 ? "session" : "sessions";
+  const isTime = mode === "time";
+  const metric = isTime ? "minutes" : "sessions";
+  const total = isTime ? summary.totalMinutes : summary.sessions;
+  const centerValue = isTime ? formatDuration(total).replace("h", "h ").trim() : total;
+  const centerLabel = isTime ? "total" : total === 1 ? "session" : "sessions";
   return (
     <div
-      className="activity-chart"
+      className={isTime ? "activity-chart activity-chart--time" : "activity-chart"}
       role="img"
-      aria-label={`${summary.sessions} ${sessionLabel}, ${formatDuration(summary.totalMinutes)} total this week`}
+      aria-label={`${centerValue} ${centerLabel} this week`}
     >
       <svg viewBox="0 0 80 80" aria-hidden="true">
         <circle
@@ -336,14 +349,14 @@ export function ActivityChart({ summary }) {
           strokeWidth="7"
         />
         {summary.byType.map((type, index) => {
-          if (!type.minutes) return null;
-          const length = (type.minutes / summary.totalMinutes) * circumference;
-          const start =
-            (summary.byType
-              .slice(0, index)
-              .reduce((total, entry) => total + entry.minutes, 0) /
-              summary.totalMinutes) *
-            circumference;
+          const value = type[metric];
+          if (!value || total === 0) return null;
+
+          const length = (value / total) * circumference;
+          const previousTotal = summary.byType
+            .slice(0, index)
+            .reduce((sum, entry) => sum + entry[metric], 0);
+          const start = (previousTotal / total) * circumference;
           return (
             <circle
               key={type.type}
@@ -361,14 +374,15 @@ export function ActivityChart({ summary }) {
         })}
       </svg>
       <span className="donut-center">
-        <strong>{summary.sessions}</strong>
-        <span>{sessionLabel}</span>
+        <strong>{centerValue}</strong>
+        <span>{centerLabel}</span>
       </span>
     </div>
   );
 }
 
 export function ActivitySummary({ summary }) {
+  const [mode, setMode] = useState("sessions");
   return (
     <section
       className="home-card summary-card"
@@ -376,12 +390,29 @@ export function ActivitySummary({ summary }) {
       id="activity"
     >
       <h2 id="summary-title">A week in motion</h2>
+      <div
+        className="summary-toggle"
+        role="group"
+        aria-label="Show weekly summary by"
+      >
+        <button
+          type="button"
+          aria-pressed={mode === "sessions"}
+          onClick={() => setMode("sessions")}
+        >
+          Sessions
+        </button>
+        <button
+          type="button"
+          aria-pressed={mode === "time"}
+          onClick={() => setMode("time")}
+        >
+          Time
+        </button>
+      </div>
       <div className="summary-content">
-        <ActivityChart summary={summary} />
+        <ActivityChart summary={summary} mode={mode} />
         <div className="summary-details">
-          <p className="total-time">
-            {formatDuration(summary.totalMinutes)} <span>total</span>
-          </p>
           <dl className="activity-legend">
             {summary.byType
               .filter((type) => type.minutes > 0)
@@ -394,7 +425,7 @@ export function ActivitySummary({ summary }) {
                     />
                     <span>{type.label}</span>
                   </dt>
-                  <dd>{formatDuration(type.minutes)}</dd>
+                  <dd>{mode === "time" ? formatDuration(type.minutes) : type.sessions}</dd>
                 </div>
               ))}
           </dl>

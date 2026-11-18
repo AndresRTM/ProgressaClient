@@ -37,7 +37,13 @@ function readStoredSession() {
   try {
     const stored = JSON.parse(window.localStorage.getItem(SESSION_STORAGE_KEY))
     if (!isValidSession(stored) || isExpired(stored)) return null
-    return { token: stored.token, userId: stored.userId, email: stored.email }
+      return {
+        token: stored.token,
+        userId: stored.userId,
+        email: stored.email,
+        firstName: stored.firstName ?? '',
+        lastName: stored.lastName ?? '',
+     }
   } catch {
     return null
   }
