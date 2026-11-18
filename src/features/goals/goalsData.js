@@ -31,6 +31,11 @@ export function splitGoals(goals, today) {
 export function statusLabel(goal, today) {
   if (isReached(goal)) return 'Reached'
   if (hasEnded(goal, today)) return 'Ended'
+  const start = isoDate(goal.startDate)
+  if (start && start > today) {
+    const days = daysBetween(today, start)
+    return days === 1 ? 'Starts tomorrow' : `Starts in ${days} days`
+  }
 
   const end = isoDate(goal.endDate)
   if (!end) return ''

@@ -219,11 +219,7 @@ export default function HomePage() {
   function navigate(tab) {
     closeDialog()
     if (tab === 'plan' || tab === 'home') setSelectedDate(getToday())
-    if (tab === 'plan') setSelectedDate(getToday())
-    if (tab === 'goals') {
-    if (tab === 'activity') {
-      setDialog({ type: tab })
-    } else if (tab !== page) {
+    if (tab !== page) {
       navigatePage(tab)
     } else {
       window.scrollTo({
