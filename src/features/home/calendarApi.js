@@ -37,6 +37,15 @@ export async function getCalendarMonth(date, signal) {
   return data.map(mapSession)
 }
 
+export async function getPlannedSessionsForDay(date, signal) {
+  const { data } = await api.get('calendar/day', {
+    params: { date },
+    signal,
+  })
+
+  return data.filter((session) => session.status === 'Planned')
+}
+
 export async function getDefaultCalendarId() {
   const { data } = await api.get('calendar/default')
   return data.calendarId;

@@ -7,6 +7,7 @@ import LogTodayDialog from '../logging/LogTodayDialog'
 import DailyLogSummary from '../logging/DailyLogSummary'
 import { useSports } from '../activities/useSports'
 import PlanPage from '../plan/PlanPage'
+import GoalsPage from '../goals/GoalsPage'
 import { ActivitySummary, BottomNav, GoalsCard, HomeHeader, WeekCard } from './HomeCards'
 import {
   ActivityDetailDialog,
@@ -22,6 +23,8 @@ import { createGoalInApi, getGoals, updateGoalInApi } from './goalsApi'
 import { getCalendarWeek } from './calendarApi'
 import { activityNameKey } from '../activities/activityCatalog'
 import {
+  buildCompletedSession,
+  createCompletedSession,
   buildPlannedSession,
   buildPlannedSessionChanges,
   completePlannedSession,
@@ -71,15 +74,20 @@ export default function HomePage() {
     const controller = new AbortController();
 
     getGoals(controller.signal)
-      .then(setApiGoals)
-      .catch(() => {
-        if (!controller.signal.aborted) {
-          setGoalsError("Could not load your goals.");
-        }
-      });
+      .then((goals) => {
+        if (controller.signal.aborted) return;
 
-    return () => controller.abort();
-  }, []);
+        setApiGoals(goals);
+        setGoalsError('');
+      })
+       .catch(() => {
+          if (!controller.signal.aborted) {
+            setGoalsError('Could not load your goals.')
+          }
+        });
+
+        return () => controller.abort();
+      }, [calendarRefresh]);
   const [notice, setNotice] = useState('')
   const [deletedActivity, setDeletedActivity] = useState(null)
   const dialogType = dialog?.type
@@ -205,11 +213,15 @@ export default function HomePage() {
 
   const showUndo = Boolean(deletedActivity && !dialog)
 
+  // The goals dialog is only used from Settings, the Goals page has no dialog to return to.
+  const backToGoals = () => setDialog(page === 'goals' ? null : { type: 'goals' })
+
   function navigate(tab) {
     closeDialog()
     if (tab === 'plan' || tab === 'home') setSelectedDate(getToday())
     if (tab === 'plan') setSelectedDate(getToday())
     if (tab === 'goals') {
+    if (tab === 'activity') {
       setDialog({ type: tab })
     } else if (tab !== page) {
       navigatePage(tab)
@@ -254,7 +266,25 @@ export default function HomePage() {
         />
       ) : (
         <>
-          {page === "plan" ? (
+          {page === "goals" ? (
+            <>
+              <HomeHeader
+                profileName={profileName}
+                onProfile={openSettings}
+                title="Small goals. Real progress."
+                subtitle="See how far you have come."
+              />
+              <GoalsPage
+                goals={apiGoals}
+                goalsError={goalsError}
+                onAdd={() => setDialog({ type: "add-goal" })}
+                onEdit={(goal) => setDialog({ type: "edit-goal", goal })}
+                onRemoved={(id) =>
+                  setApiGoals((current) => current.filter((goal) => goal.id !== id))
+                }
+              />
+            </>
+          ) : page === "plan" ? (
             <>
               <HomeHeader
                 profileName={profileName}
@@ -355,9 +385,24 @@ export default function HomePage() {
           onLoggingSettings={(draft) =>
             openLogPreferences("settings/logging", draft)
           }
-          onLogWorkout={(activity, plannedId) => {
-            const logged = logWorkout(activity, plannedId);
-            if (logged) setNotice("Workout logged. Your week is updated.");
+          onLogWorkout={async (activity, plannedId) => {
+            if (typeof plannedId === "number") {
+              await completePlannedSession(plannedId, activity.duration);
+              setCalendarRefresh((current) => current + 1);
+              setNotice("Workout logged.");
+              return true;
+            }
+            if (plannedId) {
+              const logged = logWorkout(activity, plannedId);
+              if (logged) setNotice("Workout logged.");
+              return logged;
+            }
+
+            const sportName = activityTypes[activity.type].label;
+            const session = await buildCompletedSession(activity, sportName);
+            const logged = await createCompletedSession(session);
+            setCalendarRefresh((current) => current + 1);
+            setNotice("Workout logged.");
             return logged;
           }}
           onSaveDailyLog={(date, patch) => {
@@ -418,7 +463,7 @@ export default function HomePage() {
           onSave={async (goal) => {
             const created = await createGoalInApi(goal);
             setApiGoals((current) => [...(current ?? []), created]);
-            setDialog({ type: "goals" });
+            backToGoals();
           }}
         />
       )}
@@ -534,7 +579,7 @@ export default function HomePage() {
       {dialog?.type === "edit-goal" && (
         <EditGoalDialog
           goal={dialog.goal}
-          onClose={() => setDialog({ type: "goals" })}
+          onClose={backToGoals}
           onSave={async (id, changes) => {
             const { startDate, endDate, isCompleted, calendarId } = dialog.goal;
 
@@ -550,7 +595,7 @@ export default function HomePage() {
               setApiGoals((current) =>
                 current.map((goal) => (goal.id === id ? updated : goal)),
               );
-              setDialog({ type: "goals" });
+              backToGoals();
             } catch {
               window.alert("Could not save your changes. Please try again..");
             }

@@ -21,6 +21,7 @@ export default function WorkoutDetails({
   picture,
   plannedActivity,
   date,
+  plannedTimePicker,
   onChangeSport,
   onSave,
 }) {
@@ -71,6 +72,8 @@ export default function WorkoutDetails({
           Change
         </button>
       </div>
+
+      {plannedTimePicker}
 
       <fieldset className="workout-option-group">
         <legend>Duration</legend>
