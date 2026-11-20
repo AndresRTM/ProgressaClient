@@ -8,6 +8,7 @@ import {
 } from '../../../services/passwordRecoveryApi'
 
 // ÄNDRAT 2 – Korrekt sökväg till CSS-filen
+import BrandMark from '../../../components/BrandMark'
 import '../login.css'
 
 export default function ResetPasswordPage({
@@ -77,7 +78,10 @@ export default function ResetPasswordPage({
   return (
     <div className="login-page">
       <header className="brand-row">
-        <span className="brand">Progressa</span>
+        <span className="brand">
+          <BrandMark size={32} />
+          Progressa
+        </span>
       </header>
 
       <main className="login-main">

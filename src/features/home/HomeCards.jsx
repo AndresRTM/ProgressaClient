@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Icon from "../../components/Icon";
+import BrandMark from "../../components/BrandMark";
 import SportPicture from "../settings/SportPicture";
 import { useSports } from "../activities/useSports";
 import { formatTime } from "../settings/formatTime";
@@ -22,6 +23,7 @@ export function HomeHeader({
     <header className="home-header" id="home">
       <div className="brand-row">
         <a className="brand" href="#home" aria-label="Progressa home">
+          <BrandMark size={28} />
           Progressa
         </a>
         <button
