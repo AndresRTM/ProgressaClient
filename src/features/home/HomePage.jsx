@@ -15,6 +15,7 @@ import DailyLogSummary from "../logging/DailyLogSummary";
 import { useSports } from "../activities/useSports";
 import { useAuth } from "../auth/useAuth";
 import PlanPage from "../plan/PlanPage";
+import "./homeWide.css";
 import GoalsPage from "../goals/GoalsPage";
 import {
   ActivitySummary,
@@ -267,7 +268,7 @@ export default function HomePage() {
 
   return (
     <div
-      className={`app-shell${isSettings ? " app-shell--settings" : ""}${page === "activity" ? " page-wide" : ""}`}
+      className={`app-shell${isSettings ? " app-shell--settings" : ""}${page === "activity" || page === "plan" || page === "home" || page === "goals" || isSettings ? " page-wide" : ""}`}
     >
       <a
         className="skip-link"
@@ -361,7 +362,7 @@ export default function HomePage() {
                 profileFirstName={user?.firstName?.trim() || "Settings"}
                 onProfile={openSettings}
               />
-              <main className="home-content" id="main-content" tabIndex={-1}>
+              <main className="home-content home-page" id="main-content" tabIndex={-1}>
                 <WeekCard
                   {...{ weekStart, selectedDate, timeFormat }}
                   activities={planActivities}

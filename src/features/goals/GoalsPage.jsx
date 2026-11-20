@@ -100,7 +100,7 @@ export default function GoalsPage({ goals, goalsError, onAdd, onEdit, onRemoved 
   }
 
   return (
-    <main className="home-content" id="main-content" tabIndex={-1}>
+    <main className="home-content goals-page" id="main-content" tabIndex={-1}>
       <section className="home-card" aria-labelledby="goals-page-title">
         <div className="card-heading">
           <h2 id="goals-page-title">
