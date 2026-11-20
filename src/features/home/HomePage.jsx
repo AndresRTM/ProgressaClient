@@ -268,7 +268,7 @@ export default function HomePage() {
 
   return (
     <div
-      className={`app-shell${isSettings ? " app-shell--settings" : ""}${page === "activity" || page === "plan" || page === "home" || page === "goals" ? " page-wide" : ""}`}
+      className={`app-shell${isSettings ? " app-shell--settings" : ""}${page === "activity" || page === "plan" || page === "home" || page === "goals" || isSettings ? " page-wide" : ""}`}
     >
       <a
         className="skip-link"
