@@ -5,7 +5,12 @@ import { loginErrorMessage } from '../../services/authService'
 import { useAuth } from './useAuth'
 import './login.css'
 
-export default function LoginPage({ onGoToRegister }) {
+export default function LoginPage({
+  onGoToRegister,
+
+  // NYTT 1 – Navigering till lösenordsåterställning
+  onGoToForgotPassword,
+}) {
   const { login, signedOutReason } = useAuth()
 
   const [error, setError] = useState('')
@@ -75,7 +80,6 @@ export default function LoginPage({ onGoToRegister }) {
           className="home-form login-card"
           onSubmit={handleSubmit}
         >
-          {/* Email */}
           <label>
             Email
             <input
@@ -87,15 +91,16 @@ export default function LoginPage({ onGoToRegister }) {
               spellCheck={false}
               maxLength={256}
               required
+              disabled={submitting}
               aria-invalid={error ? true : undefined}
-              aria-describedby={error ? 'login-error' : undefined}
+              aria-describedby={
+                error ? 'login-error' : undefined
+              }
             />
           </label>
 
-          {/* Password */}
           <label>
             Password
-
             <span className="login-password">
               <input
                 ref={passwordRef}
@@ -104,14 +109,20 @@ export default function LoginPage({ onGoToRegister }) {
                 autoComplete="current-password"
                 maxLength={100}
                 required
+                disabled={submitting}
                 aria-invalid={error ? true : undefined}
-                aria-describedby={error ? 'login-error' : undefined}
+                aria-describedby={
+                  error ? 'login-error' : undefined
+                }
               />
 
               <button
                 type="button"
                 className="login-reveal"
-                onClick={() => setShowPassword((shown) => !shown)}
+                onClick={() =>
+                  setShowPassword((shown) => !shown)
+                }
+                disabled={submitting}
                 aria-pressed={showPassword}
               >
                 {showPassword ? 'Hide' : 'Show'}
@@ -119,7 +130,21 @@ export default function LoginPage({ onGoToRegister }) {
             </span>
           </label>
 
-          {/* Error message */}
+          {/* NYTT 2 – START: Knapp för glömt lösenord */}
+
+          <div className="login-register">
+            <button
+              type="button"
+              className="login-register-button"
+              onClick={onGoToForgotPassword}
+              disabled={submitting}
+            >
+              Forgot password?
+            </button>
+          </div>
+
+          {/* NYTT 2 – SLUT */}
+
           {error && (
             <p
               className="login-error"
@@ -130,7 +155,6 @@ export default function LoginPage({ onGoToRegister }) {
             </p>
           )}
 
-          {/* Sign in */}
           <button
             className="primary-button"
             type="submit"
@@ -141,7 +165,6 @@ export default function LoginPage({ onGoToRegister }) {
             <Icon name="arrow-right" size={19} />
           </button>
 
-          {/* Register */}
           <div className="login-register">
             <p>Don't have an account?</p>
 
@@ -149,6 +172,7 @@ export default function LoginPage({ onGoToRegister }) {
               type="button"
               className="login-register-button"
               onClick={onGoToRegister}
+              disabled={submitting}
             >
               Create account
             </button>
@@ -158,3 +182,4 @@ export default function LoginPage({ onGoToRegister }) {
     </div>
   )
 }
+
