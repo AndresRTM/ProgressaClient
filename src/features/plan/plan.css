@@ -14,3 +14,14 @@
   font-size: 12px;
   line-height: 18px;
 }
+@media (min-width: 1024px) {
+  .home-content.plan-page {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px;
+  }
+  .plan-week {
+    grid-column: 1 / -1;
+  }
+}
