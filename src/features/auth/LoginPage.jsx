@@ -1,6 +1,7 @@
 
 import { useLayoutEffect, useRef, useState } from 'react'
 import Icon from '../../components/Icon'
+import BrandMark from '../../components/BrandMark'
 import { loginErrorMessage } from '../../services/authService'
 import { useAuth } from './useAuth'
 import './login.css'
@@ -52,7 +53,10 @@ export default function LoginPage({
   return (
     <div className="login-page">
       <header className="brand-row">
-        <span className="brand">Progressa</span>
+        <span className="brand">
+          <BrandMark size={32} />
+          Progressa
+        </span>
       </header>
 
       <main className="login-main">
