@@ -1,5 +1,6 @@
 
 import { useState } from 'react'
+import BrandMark from '../../components/BrandMark'
 import { register, registerErrorMessage } from '../../services/authService'
 import './login.css'
 
@@ -44,7 +45,10 @@ export default function RegisterPage({ onGoToLogin }) {
   return (
     <div className="login-page">
       <header className="brand-row">
-        <span className="brand">Progressa</span>
+        <span className="brand">
+          <BrandMark size={32} />
+          Progressa
+        </span>
       </header>
 
       <main className="login-main">

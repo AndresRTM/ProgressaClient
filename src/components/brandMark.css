@@ -1,0 +1,9 @@
+.brand:has(.brand-mark) {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-mark {
+  flex-shrink: 0;
+  border-radius: 28%;
+}
