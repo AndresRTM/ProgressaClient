@@ -58,11 +58,23 @@ export function monthTotals(sessions, monthStart) {
   }
 }
 
-// mode 'month': only days inside the month are counted, so the bars add up to the month total.
-// mode 'full': whole weeks are counted, even days in the neighbouring months.
-export function buildWeeks(sessions, monthStart, weekStartsOn, mode, activityTypes) {
+// The week number belongs to the week's Thursday, like ISO weeks, so a week that
+// starts in the previous month or year still gets the right number.
+function weekNumber(thursday) {
+  const [year, month, day] = thursday.split('-').map(Number)
+  const dayOfYear = (Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 0)) / 86400000
+  return Math.ceil(dayOfYear / 7)
+}
+
+function formatRange(first, last) {
+  if (first === last) return formatShortDate(first)
+  return `${Number(first.split('-')[2])}–${formatShortDate(last)}`
+}
+
+// Only days inside the month are counted, so the bars add up to the month total.
+export function buildWeeks(sessions, monthStart, weekStartsOn, activityTypes) {
   const lastDay = dateAtOffset(addMonths(monthStart, 1), -1)
-  const counted = mode === 'month' ? sessions.filter((session) => inMonth(session, monthStart)) : sessions
+  const counted = sessions.filter((session) => inMonth(session, monthStart))
   const weeks = []
 
   for (
@@ -71,15 +83,18 @@ export function buildWeeks(sessions, monthStart, weekStartsOn, mode, activityTyp
     start = dateAtOffset(start, 7)
   ) {
     const summary = calculateSummary(counted, start, activityTypes)
-    const values = Object.fromEntries(summary.byType.map((group) => [group.type, group.minutes]))
-    // A short first week is labelled with its first day inside the month.
-    const firstShownDay = mode === 'month' && start < monthStart ? monthStart : start
+    const thursday = dateAtOffset(start, weekStartsOn === 'sun' ? 4 : 3)
+    const firstShownDay = start < monthStart ? monthStart : start
+    const lastShownDay = dateAtOffset(start, 6) > lastDay ? lastDay : dateAtOffset(start, 6)
 
     weeks.push({
       start,
-      label: formatShortDate(firstShownDay),
+      label: `W${weekNumber(thursday)}`,
+      range: formatRange(firstShownDay, lastShownDay),
       totalMinutes: summary.totalMinutes,
-      values,
+      totalSessions: summary.sessions,
+      minutes: Object.fromEntries(summary.byType.map((group) => [group.type, group.minutes])),
+      sessions: Object.fromEntries(summary.byType.map((group) => [group.type, group.sessions])),
       groups: summary.byType,
     })
   }
@@ -101,6 +116,17 @@ export function buildWeeks(sessions, monthStart, weekStartsOn, mode, activityTyp
   })
 
   return { weeks, series }
+}
+
+export function sportTotals(weeks, series) {
+  return series.map((item) => {
+    const groups = weeks.flatMap((week) => week.groups.filter((group) => group.type === item.type))
+    return {
+      ...item,
+      sessions: groups.reduce((total, group) => total + group.sessions, 0),
+      minutes: groups.reduce((total, group) => total + group.minutes, 0),
+    }
+  })
 }
 
 export function formatMinutes(minutes) {
