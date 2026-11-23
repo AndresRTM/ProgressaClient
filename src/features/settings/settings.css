@@ -324,3 +324,25 @@
     font-size: 10px;
   }
 }
+
+@media (min-width: 1024px) {
+  .settings-page .settings-sections,
+  .settings-page .notif-content {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px;
+  }
+  .settings-page .settings-sections > .settings-profile {
+    grid-column: 1 / -1;
+  }
+  .settings-page .logging-sections {
+    display: block;
+    column-count: 2;
+    column-gap: 16px;
+  }
+  .settings-page .logging-sections > * {
+    break-inside: avoid;
+    margin-bottom: 16px;
+  }
+}
