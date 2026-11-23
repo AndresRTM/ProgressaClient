@@ -2,11 +2,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Icon from "../../components/Icon";
 import Sheet from "../../components/Sheet";
 import SportPicture from "../settings/SportPicture";
-import DailyLogSummary from "../logging/DailyLogSummary";
 import { useSports } from "../activities/useSports";
 import { formatTime } from "../settings/formatTime";
-import { ActivityChart } from "./HomeCards";
-import { formatDuration } from "./homeData";
+import { formatDuration, profileInitials } from "./homeData";
 import "./calendarActivity.css";
 import "./goalsDialog.css";
 import {
@@ -622,62 +620,27 @@ export function GoalsDialog({
   );
 }
 
-export function ActivityDialog({ summary, dailyLog, units, onClose }) {
+export function ProfileDialog({ profileName, user, onClose }) {
   return (
-    <Sheet title="A week in motion" onClose={onClose}>
-      <div className="expanded-summary">
-        <ActivityChart summary={summary} />
-        <p>
-          <strong>{formatDuration(summary.totalMinutes)}</strong> of movement
-          this week
-        </p>
+    <Sheet title="Your profile" onClose={onClose}>
+      <div className="settings-avatar profile-dialog-avatar" aria-hidden="true">
+        {profileInitials(profileName)}
       </div>
-      <DailyLogSummary log={dailyLog} units={units} embedded />
-      <dl className="detail-list">
-        {summary.byType.map((type) => (
-          <div key={type.type}>
-            <dt>
-              <span className="legend-dot" style={{ background: type.color }} />
-              {type.label}
-              <small>
-                {type.sessions} {type.sessions === 1 ? "session" : "sessions"}
-              </small>
-            </dt>
-            <dd>{formatDuration(type.minutes)}</dd>
-          </div>
-        ))}
-      </dl>
-    </Sheet>
-  );
-}
 
-export function ProfileDialog({ profileName, onSave, onClose }) {
-  return (
-    <Sheet title="Your space." onClose={onClose}>
-      <p className="sheet-description">Make it feel a little more like you.</p>
-      <form
-        className="home-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSave(new FormData(event.currentTarget).get("name").trim());
-        }}
-      >
-        <label>
-          Display name
-          <input
-            name="name"
-            defaultValue={profileName}
-            maxLength="40"
-            pattern=".*\S.*"
-            required
-            autoComplete="nickname"
-          />
-        </label>
-        <button className="primary-button" type="submit">
-          Save profile
-          <Icon name="check" size={19} />
-        </button>
-      </form>
+      <dl className="profile-dialog-details">
+        <div>
+          <dt>First name</dt>
+          <dd>{user?.firstName || "—"}</dd>
+        </div>
+        <div>
+          <dt>Last name</dt>
+          <dd>{user?.lastName || "—"}</dd>
+        </div>
+        <div>
+          <dt>Email</dt>
+          <dd>{user?.email || "—"}</dd>
+        </div>
+      </dl>
     </Sheet>
   );
 }

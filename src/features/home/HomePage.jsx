@@ -1,29 +1,52 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import SettingsPage from '../settings/SettingsPage'
-import useSettings from '../settings/useSettings'
-import useSportPictures from '../settings/useSportPictures'
-import AddActivityDialog from '../logging/AddActivityDialog'
-import LogTodayDialog from '../logging/LogTodayDialog'
-import DailyLogSummary from '../logging/DailyLogSummary'
-import useDailyLog from '../logging/useDailyLog'
-import { useSports } from '../activities/useSports'
-import PlanPage from '../plan/PlanPage'
-import { ActivitySummary, BottomNav, GoalsCard, HomeHeader, WeekCard } from './HomeCards'
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import SettingsPage from "../settings/SettingsPage";
+import useSettings from "../settings/useSettings";
+import useSportPictures from "../settings/useSportPictures";
+import AddActivityDialog from "../logging/AddActivityDialog";
+import LogTodayDialog from "../logging/LogTodayDialog";
+import DailyLogSummary from "../logging/DailyLogSummary";
+import useDailyLog from "../logging/useDailyLog";
+import { useSports } from "../activities/useSports";
+import { useAuth } from "../auth/useAuth";
+import PlanPage from "../plan/PlanPage";
+import "./homeWide.css";
+import GoalsPage from "../goals/GoalsPage";
+import {
+  ActivitySummary,
+  BottomNav,
+  GoalsCard,
+  HomeHeader,
+  WeekCard,
+} from "./HomeCards";
 import {
   ActivityDetailDialog,
-  ActivityDialog,
   AddGoalDialog,
   EditGoalDialog,
   GoalsDialog,
   ProfileDialog,
-} from './HomeDialogs'
-import { calculateSummary, dateAtOffset, getToday, startOfWeek, weeksBetween } from './homeData'
-import useHomeData from './useHomeData'
-import useRoute from './useRoute'
-import { createGoalInApi, getGoals, updateGoalInApi } from './goalsApi'
-import { getCalendarWeek } from './calendarApi'
-import { activityNameKey } from '../activities/activityCatalog'
+} from "./HomeDialogs";
 import {
+  calculateSummary,
+  dateAtOffset,
+  getToday,
+  startOfWeek,
+  weeksBetween,
+} from "./homeData";
+import useHomeData from "./useHomeData";
+import useRoute from "./useRoute";
+import { createGoalInApi, getGoals, updateGoalInApi } from "./goalsApi";
+import { getCalendarWeek } from "./calendarApi";
+import { activityNameKey } from "../activities/activityCatalog";
+import {
+  buildCompletedSession,
+  createCompletedSession,
   buildPlannedSession,
   buildPlannedSessionChanges,
   completePlannedSession,
@@ -32,45 +55,53 @@ import {
   updatePlannedSession,
 } from "./activitySessionsApi";
 
+const ActivityPage = lazy(() => import("../activity/ActivityPage"));
+
 // shortcut: "Repeat every week" adds separate copies for the coming weeks. Store a real
 // weekly rule instead if repeated sessions need to be edited or stopped together.
-const REPEAT_WEEKS = 12
+const REPEAT_WEEKS = 12;
 
 export default function HomePage() {
   const {
     activities,
-    profileName,
     dataError,
     logWorkout,
     setActivityDone,
     updateActivity,
     deleteActivity,
     restoreActivity,
-    updateProfile,
-  } = useHomeData()
-  const { activityTypes } = useSports()
-  const preferences = useSettings()
-  const pictureStorage = useSportPictures()
-  const { page, navigate: navigatePage, goBack } = useRoute()
-  const isSettings = page.startsWith('settings')
-  const previousPage = useRef(page)
-  const homeScroll = useRef(0)
-  const { timeFormat, weekStart: weekStartsOn } = preferences.settings.units
-  const today = getToday()
-  const [selectedDate, setSelectedDate] = useState(today)
-  const [dialog, setDialog] = useState(null)
-  const dailyLog = useDailyLog(dialog?.type === 'log-today' ? dialog.date : selectedDate)
-  const [apiGoals, setApiGoals] = useState(null)
-  const [goalsError, setGoalsError] = useState('')
-  const [calendarWeek, setCalendarWeek] = useState(null)
-  const [calendarRefresh, setCalendarRefresh] = useState(0)
-  const [calendarError, setCalendarError] = useState('')
-  const [deletedCalendarIds, setDeletedCalendarIds] = useState([])
+  } = useHomeData();
+  const { user } = useAuth();
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
+  const profileName = fullName || user?.email || "?";
+  const { activityTypes } = useSports();
+  const preferences = useSettings();
+  const pictureStorage = useSportPictures();
+  const { page, navigate: navigatePage, goBack } = useRoute();
+  const isSettings = page.startsWith("settings");
+  const previousPage = useRef(page);
+  const homeScroll = useRef(0);
+  const { timeFormat, weekStart: weekStartsOn } = preferences.settings.units;
+  const today = getToday();
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [dialog, setDialog] = useState(null);
+  const dailyLog = useDailyLog(dialog?.type === "log-today" ? dialog.date : selectedDate);
+  const [apiGoals, setApiGoals] = useState(null);
+  const [goalsError, setGoalsError] = useState("");
+  const [calendarWeek, setCalendarWeek] = useState(null);
+  const [calendarRefresh, setCalendarRefresh] = useState(0);
+  const [calendarError, setCalendarError] = useState("");
+  const [deletedCalendarIds, setDeletedCalendarIds] = useState([]);
   useEffect(() => {
     const controller = new AbortController();
 
     getGoals(controller.signal)
-      .then(setApiGoals)
+      .then((goals) => {
+        if (controller.signal.aborted) return;
+
+        setApiGoals(goals);
+        setGoalsError("");
+      })
       .catch(() => {
         if (!controller.signal.aborted) {
           setGoalsError("Could not load your goals.");
@@ -78,11 +109,11 @@ export default function HomePage() {
       });
 
     return () => controller.abort();
-  }, []);
-  const [notice, setNotice] = useState('')
-  const [deletedActivity, setDeletedActivity] = useState(null)
-  const dialogType = dialog?.type
-  const weekStart = startOfWeek(selectedDate, weekStartsOn)
+  }, [calendarRefresh]);
+  const [notice, setNotice] = useState("");
+  const [deletedActivity, setDeletedActivity] = useState(null);
+  const dialogType = dialog?.type;
+  const weekStart = startOfWeek(selectedDate, weekStartsOn);
   const planActivities =
     calendarWeek?.start === weekStart
       ? [
@@ -99,12 +130,13 @@ export default function HomePage() {
             })),
         ]
       : activities;
+
   useEffect(() => {
     if (page !== "plan" && page !== "home") return;
 
     const controller = new AbortController();
 
-    setCalendarError('')
+    setCalendarError("");
 
     const request =
       weekStartsOn === "sun"
@@ -113,6 +145,7 @@ export default function HomePage() {
             getCalendarWeek(dateAtOffset(weekStart, 1), controller.signal),
           ]).then(([previousWeek, nextWeek]) => {
             const weekEnd = dateAtOffset(weekStart, 7);
+
             return [...previousWeek, ...nextWeek].filter(
               (session) => session.date >= weekStart && session.date < weekEnd,
             );
@@ -133,111 +166,127 @@ export default function HomePage() {
 
     return () => controller.abort();
   }, [page, weekStart, weekStartsOn, calendarRefresh]);
-  const thisWeekStart = startOfWeek(today, weekStartsOn)
+  const thisWeekStart = startOfWeek(today, weekStartsOn);
   const weekNavigation = {
     weekOffset: weeksBetween(thisWeekStart, weekStart),
+
     // Other weeks open on their first day; coming back to this week opens on today.
     onChangeWeek: (delta) => {
-      const nextWeek = dateAtOffset(weekStart, delta * 7)
-      setSelectedDate(nextWeek === thisWeekStart ? today : nextWeek)
+      const nextWeek = dateAtOffset(weekStart, delta * 7);
+      setSelectedDate(nextWeek === thisWeekStart ? today : nextWeek);
     },
+
     onThisWeek: () => setSelectedDate(today),
-  }
-  const summary = calculateSummary(planActivities, weekStart, activityTypes)
+  };
+  const completedActivities = planActivities.filter(
+    (activity) => activity.logged,
+  );
+  const summary = calculateSummary(
+    completedActivities,
+    weekStart,
+    activityTypes,
+  );
   const detailActivity = ["detail", "edit-activity"].includes(dialog?.type)
     ? planActivities.find((activity) => activity.id === dialog.activity.id)
     : null;
 
-  const closeDialog = () => setDialog(null)
+  const closeDialog = () => setDialog(null);
   const openActivityForm = (date = selectedDate, activityType) => {
-    setSelectedDate(date)
-    setDialog({ type: 'add-activity', date, activityType })
-  }
+    setSelectedDate(date);
+    setDialog({ type: "add-activity", date, activityType });
+  };
 
   function openSettings() {
-    homeScroll.current = window.scrollY
-    closeDialog()
-    navigatePage('settings')
+    homeScroll.current = window.scrollY;
+    closeDialog();
+    navigatePage("settings");
   }
 
   function openLogPreferences(nextPage, draft) {
-    setDialog((current) => ({ ...current, initialValues: draft }))
-    navigatePage(nextPage)
+    setDialog((current) => ({ ...current, initialValues: draft }));
+    navigatePage(nextPage);
   }
 
   useLayoutEffect(() => {
-    if (!isSettings && previousPage.current.startsWith('settings')) {
-      window.scrollTo(0, homeScroll.current)
-      if (dialog?.type !== 'log-today')
-        document.querySelector('[data-settings-trigger]')?.focus({ preventScroll: true })
+    if (!isSettings && previousPage.current.startsWith("settings")) {
+      window.scrollTo(0, homeScroll.current);
+      if (dialog?.type !== "log-today")
+        document
+          .querySelector("[data-settings-trigger]")
+          ?.focus({ preventScroll: true });
+    } else if (page !== previousPage.current) {
+      window.scrollTo(0, 0);
     }
-    else if (page !== previousPage.current) {
-      window.scrollTo(0, 0)
-    }
-    previousPage.current = page
-  }, [page, isSettings, dialog?.type])
+    previousPage.current = page;
+  }, [page, isSettings, dialog?.type]);
 
   useEffect(() => {
-    if (!notice) return
-    const timeout = setTimeout(() => setNotice(''), 4000)
-    return () => clearTimeout(timeout)
-  }, [notice])
+    if (!notice) return;
+    const timeout = setTimeout(() => setNotice(""), 4000);
+    return () => clearTimeout(timeout);
+  }, [notice]);
 
   useEffect(() => {
-    if (!deletedActivity || dialogType) return
-    const timeout = setTimeout(() => setDeletedActivity(null), 5000)
-    return () => clearTimeout(timeout)
-  }, [deletedActivity, dialogType])
+    if (!deletedActivity || dialogType) return;
+    const timeout = setTimeout(() => setDeletedActivity(null), 5000);
+    return () => clearTimeout(timeout);
+  }, [deletedActivity, dialogType]);
 
   function undoDelete() {
-    if (!deletedActivity) return null
-    const restored = restoreActivity(deletedActivity)
+    if (!deletedActivity) return null;
+    const restored = restoreActivity(deletedActivity);
     if (restored) {
-      setSelectedDate(restored.date)
-      setDeletedActivity(null)
-      setNotice('Activity restored.')
+      setSelectedDate(restored.date);
+      setDeletedActivity(null);
+      setNotice("Activity restored.");
     } else {
-      setNotice('This activity could not be restored. Please try again.')
+      setNotice("This activity could not be restored. Please try again.");
     }
-    return restored
+    return restored;
   }
 
-  const showUndo = Boolean(deletedActivity && !dialog)
+  const showUndo = Boolean(deletedActivity && !dialog);
+
+  // The goals dialog is only used from Settings, the Goals page has no dialog to return to.
+  const backToGoals = () =>
+    setDialog(page === "goals" ? null : { type: "goals" });
 
   function navigate(tab) {
-    closeDialog()
-    if (tab === 'plan' || tab === 'home') setSelectedDate(getToday())
-    if (tab === 'plan') setSelectedDate(getToday())
-    if (tab === 'goals' || tab === 'activity') {
-      setDialog({ type: tab })
-    } else if (tab !== page) {
-      navigatePage(tab)
+    closeDialog();
+    if (tab === "plan" || tab === "home") setSelectedDate(getToday());
+    if (tab !== page) {
+      navigatePage(tab);
     } else {
       window.scrollTo({
         top: 0,
-        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-          ? 'instant'
-          : 'smooth',
-      })
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+      });
     }
   }
 
   return (
-    <div className={`app-shell${isSettings ? " app-shell--settings" : ""}`}>
+    <div
+      className={`app-shell${isSettings ? " app-shell--settings" : ""}${page === "activity" || page === "plan" || page === "home" || page === "goals" || isSettings ? " page-wide" : ""}`}
+    >
       <a
         className="skip-link"
         href={isSettings ? "#settings-content" : "#main-content"}
         onClick={(event) => {
           event.preventDefault();
+
           const content = document.getElementById(
             isSettings ? "settings-content" : "main-content",
           );
+
           content?.focus();
           content?.scrollIntoView();
         }}
       >
         Skip to content
       </a>
+
       {isSettings ? (
         <SettingsPage
           page={page}
@@ -251,7 +300,28 @@ export default function HomePage() {
         />
       ) : (
         <>
-          {page === "plan" ? (
+          {page === "goals" ? (
+            <>
+              <HomeHeader
+                profileName={profileName}
+                onProfile={openSettings}
+                title="Small goals. Real progress."
+                subtitle="See how far you have come."
+              />
+
+              <GoalsPage
+                goals={apiGoals}
+                goalsError={goalsError}
+                onAdd={() => setDialog({ type: "add-goal" })}
+                onEdit={(goal) => setDialog({ type: "edit-goal", goal })}
+                onRemoved={(id) =>
+                  setApiGoals((current) =>
+                    current.filter((goal) => goal.id !== id),
+                  )
+                }
+              />
+            </>
+          ) : page === "plan" ? (
             <>
               <HomeHeader
                 profileName={profileName}
@@ -259,7 +329,11 @@ export default function HomePage() {
                 title="Shape a week that fits you."
                 subtitle="Pick a day. Plan the move."
               />
-              {calendarError && <p role="alert">{calendarError}</p>}
+
+              {calendarError && (
+                <p role="alert">{calendarError}</p>
+              )}
+
               <PlanPage
                 {...{ weekStart, selectedDate, timeFormat }}
                 activities={planActivities}
@@ -272,10 +346,23 @@ export default function HomePage() {
                 onAdd={openActivityForm}
               />
             </>
+          ) : page === "activity" ? (
+            <Suspense fallback={null}>
+              <ActivityPage
+                profileName={profileName}
+                onProfile={openSettings}
+                weekStartsOn={weekStartsOn}
+                onPlan={() => navigate("plan")}
+              />
+            </Suspense>
           ) : (
             <>
-              <HomeHeader profileName={profileName} onProfile={openSettings} />
-              <main className="home-content" id="main-content" tabIndex={-1}>
+              <HomeHeader
+                profileName={profileName}
+                profileFirstName={user?.firstName?.trim() || "Settings"}
+                onProfile={openSettings}
+              />
+              <main className="home-content home-page" id="main-content" tabIndex={-1}>
                 <WeekCard
                   {...{ weekStart, selectedDate, timeFormat }}
                   activities={planActivities}
@@ -287,24 +374,28 @@ export default function HomePage() {
                   }
                   onAdd={() => openActivityForm()}
                 />
+
                 <GoalsCard
                   goals={apiGoals}
                   goalsError={goalsError}
                   onAdd={() => setDialog({ type: "add-goal" })}
                 />
+
                 <DailyLogSummary
                   log={dailyLog.log}
                   units={preferences.settings.units}
                 />
-                {dailyLog.error && <p className="home-storage-error" role="alert">{dailyLog.error}</p>}
+
+                {dailyLog.error && (
+                  <p className="home-storage-error" role="alert">{dailyLog.error}</p>
+                )}
                 <ActivitySummary summary={summary} />
               </main>
             </>
           )}
+
           <BottomNav
-            activeTab={
-              ["goals", "activity"].includes(dialog?.type) ? dialog.type : page
-            }
+            activeTab={dialog?.type === "goals" ? "goals" : page}
             onNavigate={navigate}
             onAdd={() => {
               dailyLog.reload();
@@ -313,6 +404,7 @@ export default function HomePage() {
           />
         </>
       )}
+
       <div
         className={`notice${notice || showUndo ? " is-visible" : ""}${showUndo ? " notice-with-action" : ""}`}
         role="status"
@@ -320,7 +412,11 @@ export default function HomePage() {
         {showUndo ? (
           <>
             <span>Activity deleted.</span>
-            <button type="button" onClick={undoDelete}>
+
+            <button
+              type="button"
+              onClick={undoDelete}
+            >
               Undo
             </button>
           </>
@@ -328,11 +424,16 @@ export default function HomePage() {
           notice
         )}
       </div>
+
       {dataError && (
-        <p className="home-storage-error" role="alert">
+        <p
+          className="home-storage-error"
+          role="alert"
+        >
           {dataError}
         </p>
       )}
+
       {dialog?.type === "log-today" && !isSettings && (
         <LogTodayDialog
           date={dialog.date}
@@ -352,9 +453,39 @@ export default function HomePage() {
           onLoggingSettings={(draft) =>
             openLogPreferences("settings/logging", draft)
           }
-          onLogWorkout={(activity, plannedId) => {
-            const logged = logWorkout(activity, plannedId);
-            if (logged) setNotice("Workout logged. Your week is updated.");
+          onLogWorkout={async (activity, plannedId) => {
+            if (typeof plannedId === "number") {
+              await completePlannedSession(
+                plannedId,
+                activity.duration
+              );
+
+              setCalendarRefresh((current) => current + 1);
+              setNotice("Workout logged.");
+
+              return true;
+            }
+
+            if (plannedId) {
+              const logged = logWorkout(activity, plannedId);
+
+              if (logged) setNotice("Workout logged.");
+
+              return logged;
+            }
+
+            const sportName = activityTypes[activity.type].label;
+
+            const session = await buildCompletedSession(
+              activity,
+              sportName
+            );
+
+            const logged = await createCompletedSession(session);
+
+            setCalendarRefresh((current) => current + 1);
+            setNotice("Workout logged.");
+
             return logged;
           }}
           onSaveDailyLog={async (patch) => {
@@ -364,6 +495,7 @@ export default function HomePage() {
           onClose={closeDialog}
         />
       )}
+
       {dialog?.type === "add-activity" && (
         <AddActivityDialog
           key="add-activity"
@@ -376,48 +508,71 @@ export default function HomePage() {
           onClose={closeDialog}
           onSave={async (activity, repeatWeekly) => {
             const sportName = activityTypes[activity.type].label;
-            const session = await buildPlannedSession(activity, sportName);
+
+            const session = await buildPlannedSession(
+              activity,
+              sportName
+            );
+
             const total = repeatWeekly ? REPEAT_WEEKS : 1;
+
             let savedCount = 0;
 
             for (let week = 0; week < total; week += 1) {
               const date = dateAtOffset(activity.date, week * 7);
+
               const scheduledAt = new Date(
                 `${date}T${activity.time}`,
               ).toISOString();
 
               try {
-                await createPlannedSession({ ...session, scheduledAt });
+                await createPlannedSession({
+                  ...session,
+                  scheduledAt
+                });
+
                 savedCount += 1;
               } catch (error) {
                 if (savedCount === 0) throw error;
+
                 break;
               }
             }
 
             setSelectedDate(activity.date);
+
             setCalendarRefresh((current) => current + 1);
+
             closeDialog();
+
             setNotice(
               savedCount === total
                 ? `${sportName} added to your plan.`
                 : `Saved ${savedCount} of ${total} sessions. Check your calendar before adding the rest.`,
             );
+
             return true;
           }}
         />
       )}
+
       {dialog?.type === "add-goal" && (
         <AddGoalDialog
           key="add-goal"
           onClose={closeDialog}
           onSave={async (goal) => {
             const created = await createGoalInApi(goal);
-            setApiGoals((current) => [...(current ?? []), created]);
-            setDialog({ type: "goals" });
+
+            setApiGoals((current) => [
+              ...(current ?? []),
+              created
+            ]);
+
+            backToGoals();
           }}
         />
       )}
+
       {dialog?.type === "edit-activity" && detailActivity && (
         <AddActivityDialog
           key={`edit-${detailActivity.id}`}
@@ -427,10 +582,13 @@ export default function HomePage() {
           favoriteSports={preferences.settings.favoriteSports}
           sportPictures={pictureStorage.pictures}
           onFavoriteChange={preferences.setFavoriteSports}
-          onClose={() => setDialog({ ...dialog, type: "detail" })}
+          onClose={() =>
+            setDialog({ ...dialog, type: "detail" })
+          }
           onSave={async (values) => {
             if (typeof detailActivity.id === "number") {
               const sportName = activityTypes[values.type].label;
+
               const changes = await buildPlannedSessionChanges(
                 values,
                 sportName,
@@ -440,22 +598,40 @@ export default function HomePage() {
                 ...changes,
                 notes: detailActivity.notes,
               });
+
               setSelectedDate(values.date);
+
               setCalendarRefresh((current) => current + 1);
+
               closeDialog();
+
               setNotice("Activity updated.");
+
               return true;
             }
 
-            const updated = updateActivity(detailActivity.id, values);
+            const updated = updateActivity(
+              detailActivity.id,
+              values
+            );
+
             if (!updated) return null;
+
             setSelectedDate(updated.date);
-            setDialog({ ...dialog, type: "detail", activity: updated });
+
+            setDialog({
+              ...dialog,
+              type: "detail",
+              activity: updated
+            });
+
             setNotice("Activity updated.");
+
             return updated;
           }}
         />
       )}
+
       {dialog?.type === "detail" && detailActivity && (
         <ActivityDetailDialog
           key="detail"
@@ -463,32 +639,52 @@ export default function HomePage() {
           timeFormat={timeFormat}
           sportPictures={pictureStorage.pictures}
           onEdit={(activity) =>
-            setDialog({ ...dialog, type: "edit-activity", activity })
+            setDialog({
+              ...dialog,
+              type: "edit-activity",
+              activity
+            })
           }
           onDelete={async (activity) => {
             if (typeof activity.id === "number") {
               if (activity.logged) return null;
 
               await deletePlannedSession(activity.id);
-              setDeletedCalendarIds((ids) => [...ids, activity.id]);
+
+              setDeletedCalendarIds((ids) => [
+                ...ids,
+                activity.id
+              ]);
+
               setDialog((current) =>
                 current?.type === "detail" &&
                 current.activity.id === activity.id
                   ? null
                   : current,
               );
+
               setNotice("Activity deleted.");
+
               return activity;
             }
 
             const removed = deleteActivity(activity.id);
+
             if (!removed) return null;
+
             setDeletedActivity(removed);
+
             setNotice("");
+
             closeDialog();
+
             return removed;
           }}
-          onSetDone={async (activity, done, actualDurationInMinutes) => {
+          onSetDone={async (
+            activity,
+            done,
+            actualDurationInMinutes
+          ) => {
             if (typeof activity.id === "number") {
               if (!done) return null;
 
@@ -496,11 +692,17 @@ export default function HomePage() {
                 activity.id,
                 actualDurationInMinutes,
               );
+
               setCalendarRefresh((current) => current + 1);
+
               return true;
             }
 
-            const updated = setActivityDone(activity.id, done);
+            const updated = setActivityDone(
+              activity.id,
+              done
+            );
+
             if (updated) {
               setNotice(
                 done
@@ -508,21 +710,32 @@ export default function HomePage() {
                   : "Activity marked as upcoming.",
               );
             }
+
             return updated;
           }}
           onClose={closeDialog}
         />
       )}
+
       {dialog?.type === "goals" && (
         <GoalsDialog
           key="goals"
           goals={apiGoals}
           goalsError={goalsError}
           onRemoved={(id) => {
-            setApiGoals((current) => current.filter((goal) => goal.id !== id));
+            setApiGoals((current) =>
+              current.filter((goal) => goal.id !== id)
+            );
           }}
-          onAdd={() => setDialog({ type: "add-goal" })}
-          onEdit={(goal) => setDialog({ type: "edit-goal", goal })}
+          onAdd={() =>
+            setDialog({ type: "add-goal" })
+          }
+          onEdit={(goal) =>
+            setDialog({
+              type: "edit-goal",
+              goal
+            })
+          }
           onClose={closeDialog}
         />
       )}
@@ -530,9 +743,14 @@ export default function HomePage() {
       {dialog?.type === "edit-goal" && (
         <EditGoalDialog
           goal={dialog.goal}
-          onClose={() => setDialog({ type: "goals" })}
+          onClose={backToGoals}
           onSave={async (id, changes) => {
-            const { startDate, endDate, isCompleted, calendarId } = dialog.goal;
+            const {
+              startDate,
+              endDate,
+              isCompleted,
+              calendarId
+            } = dialog.goal;
 
             try {
               const updated = await updateGoalInApi(id, {
@@ -544,35 +762,29 @@ export default function HomePage() {
               });
 
               setApiGoals((current) =>
-                current.map((goal) => (goal.id === id ? updated : goal)),
+                current.map((goal) =>
+                  goal.id === id
+                    ? updated
+                    : goal
+                ),
               );
-              setDialog({ type: "goals" });
+
+              backToGoals();
             } catch {
-              window.alert("Could not save your changes. Please try again..");
+              window.alert(
+                "Could not save your changes. Please try again.."
+              );
             }
           }}
         />
       )}
 
-      {dialog?.type === "activity" && (
-        <ActivityDialog
-          key="activity"
-          summary={summary}
-          dailyLog={dailyLog.log}
-          units={preferences.settings.units}
-          onClose={closeDialog}
-        />
-      )}
       {dialog?.type === "profile" && (
         <ProfileDialog
           key="profile"
           profileName={profileName}
+          user={user}
           onClose={closeDialog}
-          onSave={(name) => {
-            updateProfile(name);
-            closeDialog();
-            setNotice("Profile updated.");
-          }}
         />
       )}
     </div>

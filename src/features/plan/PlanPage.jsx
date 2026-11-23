@@ -33,8 +33,8 @@ export default function PlanPage({
     .sort(byDateAndTime)
 
   return (
-    <main className="home-content" id="main-content" tabIndex={-1}>
-      <section className="home-card" aria-labelledby="plan-week-title">
+    <main className="home-content plan-page" id="main-content" tabIndex={-1}>
+      <section className="home-card plan-week" aria-labelledby="plan-week-title">
         <WeekHeading
           id="plan-week-title"
           thisWeekTitle="Your week at a glance"

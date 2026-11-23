@@ -8,7 +8,13 @@ export async function login({ email, password }) {
     throw new Error('Unexpected login response from the server.')
   }
 
-  return { token: data.token, userId: data.userId, email: data.email }
+    return {
+      token: data.token,
+      userId: data.userId,
+      email: data.email,
+      firstName: data.firstName ?? '',
+      lastName: data.lastName ?? '',
+  }
 }
 
 export function loginErrorMessage(error) {

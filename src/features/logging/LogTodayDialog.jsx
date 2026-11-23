@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Icon from '../../components/Icon'
 import Sheet from '../../components/Sheet'
+import { getPlannedSessionsForDay } from '../home/calendarApi'
 import { useSports } from '../activities/useSports'
+import { activityNameKey } from '../activities/activityCatalog'
 import ActivityPicker from './ActivityPicker'
 import DailyLogFields from './DailyLogFields'
 import { KJ_PER_KCAL } from './dailyLogData'
@@ -29,9 +31,32 @@ export default function LogTodayDialog({
 }) {
   const { sports } = useSports()
   const [selected, setSelected] = useState(null)
+  const [plannedSessionId, setPlannedSessionId] = useState('')
   const [editedDraft, setDraft] = useState(initialValues)
   const [searching, setSearching] = useState(false)
   const [feedback, setFeedback] = useState('')
+  const [plannedSessions, setPlannedSessions] = useState(null)
+  const savingWorkout = useRef(false)
+  const [plannedSessionsError, setPlannedSessionsError] = useState('')
+  useEffect(() => {
+    if (preview) return;
+
+    const controller = new AbortController();
+    setPlannedSessions(null);
+    setPlannedSessionsError("");
+
+    getPlannedSessionsForDay(date, controller.signal)
+      .then((sessions) => {
+        if (!controller.signal.aborted) setPlannedSessions(sessions);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setPlannedSessionsError("Could not load planned workouts.");
+        }
+      });
+
+    return () => controller.abort();
+  }, [date, preview]);
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const draft = editedDraft ?? {
@@ -40,9 +65,40 @@ export default function LogTodayDialog({
     sleepMinutes: dailyLog?.sleepMinutes ?? '',
   }
   const sport = sports.find((item) => item.id === selected)
-  const plannedActivity = activities.find(
-    (activity) => activity.type === selected && activity.date === date && !activity.logged,
+  const matchingPlannedSessions = sport && plannedSessions ? plannedSessions.filter(
+    (session) => activityNameKey(session.categoryName) === activityNameKey(sport.label),
   )
+  : []
+
+    const selectedPlannedSession = matchingPlannedSessions.find(
+      (session) =>
+        matchingPlannedSessions.length === 1 ||
+        String(session.id) === plannedSessionId,
+    );
+
+    let plannedActivity;
+
+    if (selectedPlannedSession) {
+      plannedActivity = {
+        id: selectedPlannedSession.id,
+        time: new Date(selectedPlannedSession.scheduledAt).toLocaleTimeString(
+          "sv-SE",
+          {
+            hour: "2-digit",
+            minute: "2-digit",
+          },
+        ),
+        duration: selectedPlannedSession.plannedDurationInMinutes,
+        intensity: null,
+      };
+    } else if (matchingPlannedSessions.length === 0) {
+      plannedActivity = activities.find(
+        (activity) =>
+          activity.type === selected &&
+          activity.date === date &&
+          !activity.logged,
+      );
+    }
   const hasDailyFields = Object.values(settings.logging).some((mode) => mode !== 'off')
   const dateLabel = new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', {
     weekday: 'long',
@@ -58,10 +114,46 @@ export default function LogTodayDialog({
     onClose()
   }
 
-  function logWorkout(workout) {
-    if (!preview && !onLogWorkout(workout, plannedActivity?.id)) {
-      setError('This workout could not be logged. Check its details and try again.')
-      return false
+  async function LogWorkout(workout) {
+    if (savingWorkout.current) return false
+
+    if (!preview && plannedSessions === null) {
+      setError(plannedSessionsError || "Wait for planned workouts to load.");
+      return false;
+    }
+
+    if (matchingPlannedSessions.length > 0 && !selectedPlannedSession) {
+      setError("Choose which planned workout to log.");
+      return false;
+    }
+
+    if (
+      selectedPlannedSession &&
+      new Date(selectedPlannedSession.scheduledAt).getTime() > Date.now()
+    ) {
+      setError("This planned workout has not started yet.");
+      return false;
+    }
+
+    if (!preview) {
+      savingWorkout.current = true;
+
+      try {
+        const logged = await onLogWorkout(workout, plannedActivity?.id);
+        if (!logged) throw new Error("Workout could not be logged.");
+        if (selectedPlannedSession) {
+          setPlannedSessions((current) =>
+            current.filter((session) => session.id !== selectedPlannedSession.id),
+          )
+        }
+      } catch {
+        setError(
+          "This workout could not be logged. Check its details and try again.",
+        );
+        return false;
+      } finally {
+        savingWorkout.current = false;
+      }
     }
     setError('')
     if (!hasDailyFields) onClose()
@@ -117,19 +209,54 @@ export default function LogTodayDialog({
   return (
     <Sheet title="Log today" onClose={close} className="log-sheet" showHandle>
       <p className="log-date">{dateLabel}</p>
-      {preview && <p className="log-preview-note">Preview only. Entries here aren't saved.</p>}
+      {preview && (
+        <p className="log-preview-note">
+          Preview only. Entries here aren't saved.
+        </p>
+      )}
       {sport ? (
         <WorkoutDetails
-          key={sport.id}
+          key={`${sport.id}-${plannedActivity?.id ?? "new"}`}
           sport={sport}
           picture={sportPictures?.[sport.id]}
           plannedActivity={plannedActivity}
+          plannedTimePicker={
+            matchingPlannedSessions.length > 1 && (
+              <fieldset className="workout-option-group">
+                <legend>Planned start time</legend>
+                <div className="workout-duration-options workout-time-options">
+                  {matchingPlannedSessions.map((session) => {
+                    const id = String(session.id);
+                    const isSelected = plannedSessionId === id;
+
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() => setPlannedSessionId(id)}
+                      >
+                        {new Date(session.scheduledAt).toLocaleTimeString(
+                          "sv-SE",
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
+                        {isSelected && <span aria-hidden="true"> ✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            )
+          }
           date={date}
           onChangeSport={() => {
-            setSelected(null)
-            setSearching(false)
+            setSelected(null);
+            setSearching(false);
           }}
-          onSave={logWorkout}
+          onSave={LogWorkout}
         />
       ) : (
         <>
@@ -137,12 +264,14 @@ export default function LogTodayDialog({
             favoriteSports={settings.favoriteSports}
             sportPictures={sportPictures}
             activities={activities}
+            plannedSessions={plannedSessions ?? []}
             date={date}
-            heading={hasDailyFields ? 'Training' : 'Favorites'}
+            heading={hasDailyFields ? "Training" : "Favorites"}
             onSelect={(id) => {
-              if (saving) return
-              setSelected(id)
-              setError('')
+              if (saving) return;
+              setSelected(id);
+              setPlannedSessionId("");
+              setError("");
             }}
             onSearchChange={setSearching}
             allowCreate={!preview}
@@ -187,16 +316,17 @@ export default function LogTodayDialog({
               </form>
             ) : (
               <p className="log-picker-help">
-                Tap what you trained today. Choose your duration and intensity next.
+                Tap what you trained today. Choose your duration and intensity
+                next.
               </p>
             ))}
         </>
       )}
-      {(error || dataError) && (
+      {(error || plannedSessionsError || dataError) && (
         <p className="log-error" role="alert">
-          {error || dataError}
+          {error || plannedSessionsError || dataError}
         </p>
       )}
     </Sheet>
-  )
+  );
 }
