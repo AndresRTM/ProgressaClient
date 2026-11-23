@@ -8,25 +8,18 @@ import { KJ_PER_KCAL } from './dailyLogData'
 import WorkoutDetails from './WorkoutDetails'
 import './logToday.css'
 
-function initialDraft(saved, initialValues) {
-  return (
-    initialValues || {
-      amounts: {},
-      checks: { ...saved?.checks },
-      sleepMinutes: saved?.sleepMinutes ?? '',
-    }
-  )
-}
-
 export default function LogTodayDialog({
   date,
   activities = [],
   settings,
   sportPictures,
   dailyLog,
+  dailyLogLoading,
+  dailyLogError,
   initialValues,
   onLogWorkout,
   onSaveDailyLog,
+  onReloadDailyLog,
   onFavoriteChange,
   onEditFavorites,
   onLoggingSettings,
@@ -36,10 +29,16 @@ export default function LogTodayDialog({
 }) {
   const { sports } = useSports()
   const [selected, setSelected] = useState(null)
-  const [draft, setDraft] = useState(() => initialDraft(dailyLog, initialValues))
+  const [editedDraft, setDraft] = useState(initialValues)
   const [searching, setSearching] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+  const draft = editedDraft ?? {
+    amounts: {},
+    checks: { ...dailyLog?.checks },
+    sleepMinutes: dailyLog?.sleepMinutes ?? '',
+  }
   const sport = sports.find((item) => item.id === selected)
   const plannedActivity = activities.find(
     (activity) => activity.type === selected && activity.date === date && !activity.logged,
@@ -50,6 +49,14 @@ export default function LogTodayDialog({
     day: 'numeric',
     month: 'long',
   })
+
+  function close(event) {
+    if (saving) {
+      event?.preventDefault()
+      return
+    }
+    onClose()
+  }
 
   function logWorkout(workout) {
     if (!preview && !onLogWorkout(workout, plannedActivity?.id)) {
@@ -68,8 +75,10 @@ export default function LogTodayDialog({
     return true
   }
 
-  function saveDailyLog(event) {
+  async function saveDailyLog(event) {
     event.preventDefault()
+    if (saving || dailyLogLoading || dailyLogError) return
+
     const patch = { amounts: {}, checks: {} }
     for (const [key, mode] of Object.entries(settings.logging)) {
       if (mode === 'goal') patch.checks[key] = Boolean(draft.checks[key])
@@ -88,12 +97,25 @@ export default function LogTodayDialog({
         patch.amounts[key] = amount
       }
     }
-    if (preview || onSaveDailyLog(date, patch)) onClose()
-    else setError('This log could not be saved. Check the amounts and try again.')
+    if (preview) {
+      onClose()
+      return
+    }
+
+    setError('')
+    setSaving(true)
+    try {
+      await onSaveDailyLog(patch)
+      onClose()
+    } catch (error) {
+      setError(error.message)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
-    <Sheet title="Log today" onClose={onClose} className="log-sheet" showHandle>
+    <Sheet title="Log today" onClose={close} className="log-sheet" showHandle>
       <p className="log-date">{dateLabel}</p>
       {preview && <p className="log-preview-note">Preview only. Entries here aren't saved.</p>}
       {sport ? (
@@ -118,13 +140,14 @@ export default function LogTodayDialog({
             date={date}
             heading={hasDailyFields ? 'Training' : 'Favorites'}
             onSelect={(id) => {
+              if (saving) return
               setSelected(id)
               setError('')
             }}
             onSearchChange={setSearching}
             allowCreate={!preview}
             onFavoriteChange={onFavoriteChange}
-            onEditFavorites={onEditFavorites ? () => onEditFavorites(draft) : undefined}
+            onEditFavorites={onEditFavorites && !saving ? () => onEditFavorites(editedDraft) : undefined}
           />
           {feedback && (
             <p className="log-workout-feedback" role="status">
@@ -135,17 +158,32 @@ export default function LogTodayDialog({
           {!searching &&
             (hasDailyFields ? (
               <form className="log-daily-form" onSubmit={saveDailyLog}>
-                <DailyLogFields
-                  modes={settings.logging}
-                  targets={settings.targets}
-                  units={settings.units}
-                  value={draft}
-                  onChange={setDraft}
-                  onSettings={onLoggingSettings ? () => onLoggingSettings(draft) : undefined}
-                />
-                <button className="primary-button log-save" type="submit">
-                  Save log
-                </button>
+                {dailyLogLoading ? (
+                  <p className="log-picker-help" role="status">Loading your daily log…</p>
+                ) : dailyLogError ? (
+                  <>
+                    <p className="log-error" role="alert">{dailyLogError}</p>
+                    <button className="primary-button log-save" type="button" onClick={onReloadDailyLog}>
+                      Try again
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <fieldset className="log-daily-inputs" disabled={saving}>
+                      <DailyLogFields
+                        modes={settings.logging}
+                        targets={settings.targets}
+                        units={settings.units}
+                        value={draft}
+                        onChange={setDraft}
+                        onSettings={onLoggingSettings ? () => onLoggingSettings(editedDraft) : undefined}
+                      />
+                    </fieldset>
+                    <button className="primary-button log-save" type="submit" disabled={saving}>
+                      {saving ? 'Saving…' : 'Save log'}
+                    </button>
+                  </>
+                )}
               </form>
             ) : (
               <p className="log-picker-help">

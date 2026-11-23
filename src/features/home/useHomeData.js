@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { useSports } from '../activities/useSports'
-import { isLogDate, mergeDailyLog, normalizeDailyLogs } from '../logging/dailyLogData'
+import { isLogDate, normalizeDailyLogs } from '../logging/dailyLogData'
 import { INITIAL_ACTIVITIES, INITIAL_GOALS, INTENSITY_PACES, NO_PACE } from './homeData'
 
 const STORAGE_KEY = 'progressa:home:v1'
@@ -77,6 +77,7 @@ function loadHomeData(activityTypes) {
         activities: stored.activities,
         goals: stored.goals,
         profileName: stored.profileName,
+        // Behåll gamla lokala loggar utan att flytta dem till ett användarkonto.
         dailyLogs: normalizeDailyLogs(stored.dailyLogs),
       }
     }
@@ -232,27 +233,6 @@ export default function useHomeData() {
     [updateData],
   )
 
-  const saveDailyLog = useCallback(
-    (date, patch) => {
-      if (!isLogDate(date)) return false
-      const current = currentData.current
-      const previous = current.dailyLogs[date]
-      const log = mergeDailyLog(previous, patch)
-      if (!log) return false
-      if (
-        !previous &&
-        Object.keys(log.amounts).length === 0 &&
-        Object.keys(log.checks).length === 0 &&
-        !Object.hasOwn(log, 'sleepMinutes')
-      )
-        return true
-
-      updateData({ ...current, dailyLogs: { ...current.dailyLogs, [date]: log } })
-      return true
-    },
-    [updateData],
-  )
-
   const addGoal = useCallback(
     (goal) => {
       const nextGoal = {
@@ -290,7 +270,6 @@ export default function useHomeData() {
     restoreActivity,
     logWorkout,
     setActivityDone,
-    saveDailyLog,
     addGoal,
     updateProfile,
   }

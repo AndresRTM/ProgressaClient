@@ -9,7 +9,7 @@ import { useAuth } from './features/auth/useAuth'
 import './App.css'
 
 function AppContent() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
 
   const [authPage, setAuthPage] = useState('login')
 
@@ -36,7 +36,7 @@ function AppContent() {
   // Användaren är inloggad
   return (
     <SportsProvider>
-      <HomePage />
+      <HomePage key={user.id} />
     </SportsProvider>
   )
 }
