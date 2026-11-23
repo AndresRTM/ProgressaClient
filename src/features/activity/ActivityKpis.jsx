@@ -32,18 +32,18 @@ export default function ActivityKpis({ current, previous }) {
   return (
     <div className="activity-kpis">
       <Kpi
-        label="Training time"
-        value={formatMinutes(current.totalMinutes)}
-        current={current.totalMinutes}
-        previous={previous.totalMinutes}
-        format={formatMinutes}
-      />
-      <Kpi
         label="Sessions"
         value={String(current.sessions)}
         current={current.sessions}
         previous={previous.sessions}
         format={(count) => String(Math.abs(count))}
+      />
+      <Kpi
+        label="Training time"
+        value={formatMinutes(current.totalMinutes)}
+        current={current.totalMinutes}
+        previous={previous.totalMinutes}
+        format={formatMinutes}
       />
     </div>
   )
