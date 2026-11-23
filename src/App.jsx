@@ -21,7 +21,7 @@ function isResetPasswordUrl() {
 }
 
 function AppContent() {
-  const { isAuthenticated, logout } = useAuth() // NYTT: logout
+  const { isAuthenticated, logout, user } = useAuth() // NYTT: logout
 
   // ÄNDRAT 3 – Kontrollera återställningslänken vid start
   const [authPage, setAuthPage] = useState(() =>
@@ -127,7 +127,7 @@ function AppContent() {
   // Användaren är inloggad
   return (
     <SportsProvider>
-      <HomePage />
+      <HomePage key={user.id} />
     </SportsProvider>
   )
 }

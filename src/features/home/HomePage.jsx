@@ -12,6 +12,7 @@ import useSportPictures from "../settings/useSportPictures";
 import AddActivityDialog from "../logging/AddActivityDialog";
 import LogTodayDialog from "../logging/LogTodayDialog";
 import DailyLogSummary from "../logging/DailyLogSummary";
+import useDailyLog from "../logging/useDailyLog";
 import { useSports } from "../activities/useSports";
 import { useAuth } from "../auth/useAuth";
 import PlanPage from "../plan/PlanPage";
@@ -63,14 +64,12 @@ const REPEAT_WEEKS = 12;
 export default function HomePage() {
   const {
     activities,
-    dailyLogs,
     dataError,
     logWorkout,
     setActivityDone,
     updateActivity,
     deleteActivity,
     restoreActivity,
-    saveDailyLog,
   } = useHomeData();
   const { user } = useAuth();
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
@@ -86,6 +85,7 @@ export default function HomePage() {
   const today = getToday();
   const [selectedDate, setSelectedDate] = useState(today);
   const [dialog, setDialog] = useState(null);
+  const dailyLog = useDailyLog(dialog?.type === "log-today" ? dialog.date : selectedDate);
   const [apiGoals, setApiGoals] = useState(null);
   const [goalsError, setGoalsError] = useState("");
   const [calendarWeek, setCalendarWeek] = useState(null);
@@ -382,10 +382,13 @@ export default function HomePage() {
                 />
 
                 <DailyLogSummary
-                  log={dailyLogs[selectedDate]}
+                  log={dailyLog.log}
                   units={preferences.settings.units}
                 />
 
+                {dailyLog.error && (
+                  <p className="home-storage-error" role="alert">{dailyLog.error}</p>
+                )}
                 <ActivitySummary summary={summary} />
               </main>
             </>
@@ -394,12 +397,10 @@ export default function HomePage() {
           <BottomNav
             activeTab={dialog?.type === "goals" ? "goals" : page}
             onNavigate={navigate}
-            onAdd={() =>
-              setDialog({
-                type: "log-today",
-                date: selectedDate
-              })
-            }
+            onAdd={() => {
+              dailyLog.reload();
+              setDialog({ type: "log-today", date: selectedDate });
+            }}
           />
         </>
       )}
@@ -440,7 +441,10 @@ export default function HomePage() {
           activities={activities}
           settings={preferences.settings}
           sportPictures={pictureStorage.pictures}
-          dailyLog={dailyLogs[dialog.date]}
+          dailyLog={dailyLog.log}
+          dailyLogLoading={dailyLog.loading}
+          dailyLogError={dailyLog.error}
+          onReloadDailyLog={dailyLog.reload}
           dataError={dataError}
           onFavoriteChange={preferences.setFavoriteSports}
           onEditFavorites={(draft) =>
@@ -484,12 +488,9 @@ export default function HomePage() {
 
             return logged;
           }}
-          onSaveDailyLog={(date, patch) => {
-            const saved = saveDailyLog(date, patch);
-
-            if (saved) setNotice("Your daily log is saved.");
-
-            return saved;
+          onSaveDailyLog={async (patch) => {
+            await dailyLog.save(patch);
+            setNotice("Your daily log is saved.");
           }}
           onClose={closeDialog}
         />
