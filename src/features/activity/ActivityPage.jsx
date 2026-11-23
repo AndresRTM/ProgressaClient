@@ -11,6 +11,7 @@ import {
   formatMonthTitle,
   monthStartOf,
   monthTotals,
+  sportTotals,
   withSportTypes,
 } from './activityStats'
 import useActivityMonth from './useActivityMonth'
@@ -23,14 +24,15 @@ const TABS = [
 
 export default function ActivityPage({ profileName, onProfile, weekStartsOn, onPlan }) {
   const [tab, setTab] = useState('overview')
-  const [mode, setMode] = useState('month')
+  const [metric, setMetric] = useState('sessions')
   const [month, setMonth] = useState(() => monthStartOf(getToday()))
   const { activityTypes } = useSports()
   const { sessions, loading, error, retry } = useActivityMonth(month)
   const completed = withSportTypes(sessions, activityTypes)
   const current = monthTotals(completed, month)
   const previous = monthTotals(completed, addMonths(month, -1))
-  const { weeks, series } = buildWeeks(completed, month, weekStartsOn, mode, activityTypes)
+  const { weeks, series } = buildWeeks(completed, month, weekStartsOn, activityTypes)
+  const sports = sportTotals(weeks, series)
   const isFutureMonth = month > monthStartOf(getToday())
 
   function selectTab(id) {
@@ -120,8 +122,9 @@ export default function ActivityPage({ profileName, onProfile, weekStartsOn, onP
                 <TrainingChart
                   weeks={weeks}
                   series={series}
-                  mode={mode}
-                  onModeChange={setMode}
+                  sports={sports}
+                  metric={metric}
+                  onMetricChange={setMetric}
                   monthTitle={formatMonthTitle(month)}
                 />
               ) : (

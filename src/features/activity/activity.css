@@ -190,6 +190,43 @@
   border-top: 1px solid #ffffff33;
   font-weight: 600;
 }
+.sport-breakdown {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #dfe3da;
+}
+.sport-breakdown h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+.sport-breakdown ul {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.sport-breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 20px;
+}
+.sport-breakdown-row span:last-child {
+  margin-left: auto;
+  font-weight: 600;
+}
+.sport-breakdown-track {
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 3px;
+  background: var(--page);
+}
+.sport-breakdown-fill {
+  height: 100%;
+  border-radius: 3px;
+}
 .activity-sr-only {
   position: absolute;
   width: 1px;
